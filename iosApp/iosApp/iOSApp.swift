@@ -1,10 +1,11 @@
 import SwiftUI
+import MultiPlatformLibrary
 
 @main
 struct iOSApp: App {
 
     init() {
-        KoinIOS.doInitKoin()
+        HelperKt.doInitKoin()
     }
 
 	var body: some Scene {
