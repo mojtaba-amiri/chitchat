@@ -3,6 +3,7 @@ plugins {
     kotlin("native.cocoapods")
     id("com.android.library")
     id("org.jetbrains.compose")
+    kotlin("plugin.serialization") version Dependencies.kotlinSerializationVer
 }
 
 kotlin {
@@ -13,10 +14,10 @@ kotlin {
     iosSimulatorArm64()
 
     cocoapods {
-        version = "1.0.0"
-        summary = "Some description for the Shared Module"
-        homepage = "Link to the Shared Module homepage"
-        ios.deploymentTarget = "14.1"
+        version = Dependencies.iOS.version
+        summary = Dependencies.iOS.summary
+        homepage = Dependencies.iOS.homePage
+        ios.deploymentTarget = Dependencies.iOS.deployTarget
         podfile = project.file("../iosApp/Podfile")
         framework {
             baseName = "shared"
@@ -33,13 +34,31 @@ kotlin {
                 implementation(compose.material)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.components.resources)
+                implementation(Dependencies.kamel)
+                implementation(Dependencies.ktorCore)
+                implementation(Dependencies.ktorContentNegitiation)
+                implementation(Dependencies.kotlinSerialization)
+                implementation(Dependencies.kotlinDateTime)
+                implementation(Dependencies.kotlinUuid)
+
+                api(Dependencies.mokoMvvmCore)
+                api(Dependencies.mokoMvvmFlow)
+                api(Dependencies.mokoMvvmCompose)
+                api(Dependencies.mokoMvvmComposeFlow)
+
+                implementation(Dependencies.koinCore)
+                implementation(Dependencies.koinTest)
+
             }
         }
         val androidMain by getting {
             dependencies {
-                api("androidx.activity:activity-compose:1.6.1")
-                api("androidx.appcompat:appcompat:1.6.1")
-                api("androidx.core:core-ktx:1.9.0")
+                api(Dependencies.Android.compose)
+                api(Dependencies.Android.appCompat)
+                api(Dependencies.Android.coreKtx)
+                api(Dependencies.Android.ktorCore)
+                api(Dependencies.Android.koin)
+                api(Dependencies.Android.koinCompose)
             }
         }
         val iosX64Main by getting
@@ -50,21 +69,25 @@ kotlin {
             iosX64Main.dependsOn(this)
             iosArm64Main.dependsOn(this)
             iosSimulatorArm64Main.dependsOn(this)
+
+            dependencies {
+                implementation(Dependencies.iOS.ktorCore)
+            }
         }
     }
 }
 
 android {
-    compileSdk = (findProperty("android.compileSdk") as String).toInt()
-    namespace = "com.myapplication.common"
+    compileSdk = Dependencies.Android.compileSdk
+    namespace = Dependencies.Android.namespace
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     sourceSets["main"].res.srcDirs("src/androidMain/res")
     sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
-        minSdk = (findProperty("android.minSdk") as String).toInt()
-        targetSdk = (findProperty("android.targetSdk") as String).toInt()
+        minSdk = Dependencies.Android.minSdk
+        targetSdk = Dependencies.Android.targetSdk
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

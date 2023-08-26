@@ -1,4 +1,4 @@
-rootProject.name = "MyApplication"
+rootProject.name = "ChitChat"
 
 include(":androidApp")
 include(":shared")
@@ -23,6 +23,8 @@ pluginManagement {
         id("com.android.library").version(agpVersion)
 
         id("org.jetbrains.compose").version(composeVersion)
+        id("com.android.application") version "8.1.1"
+        id("org.jetbrains.kotlin.android") version "1.9.0"
     }
 }
 

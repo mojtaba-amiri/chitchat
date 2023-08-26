@@ -2,6 +2,11 @@ import SwiftUI
 
 @main
 struct iOSApp: App {
+
+    init() {
+        KoinIOS.doInitKoin()
+    }
+
 	var body: some Scene {
 		WindowGroup {
 		    ZStack {

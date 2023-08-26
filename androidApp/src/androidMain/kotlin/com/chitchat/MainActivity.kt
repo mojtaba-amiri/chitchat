@@ -1,4 +1,4 @@
-package com.myapplication
+package com.chitchat
 
 import MainView
 import android.os.Bundle
