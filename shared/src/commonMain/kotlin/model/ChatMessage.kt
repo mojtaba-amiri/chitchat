@@ -9,6 +9,6 @@ import kotlinx.uuid.generateUUID
 data class ChatMessage(
     val id: UUID = UUID.generateUUID(),
     val timeStamp: Long = Clock.System.now().epochSeconds,
-    val message: String,
+    var message: String,
     val user: String
 )
