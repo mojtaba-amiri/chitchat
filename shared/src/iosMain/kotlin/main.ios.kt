@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import model.ChatMessage
+import model.PlatformEvent
 
 actual fun getPlatformName(): String = "iOS"
 
@@ -23,4 +24,4 @@ actual class PlatformSpecificEvent{
     }
 }
 
-fun MainViewController() = ComposeUIViewController { App() }
+fun MainViewController(event: StateFlow<PlatformEvent>) = ComposeUIViewController { App(event) }

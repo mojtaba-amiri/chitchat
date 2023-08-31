@@ -1,4 +1,6 @@
 import androidx.compose.runtime.Composable
+import kotlinx.coroutines.flow.StateFlow
+import model.PlatformEvent
 
 actual fun getPlatformName(): String = "Android"
 
@@ -17,7 +19,7 @@ actual class PlatformSpecificEvent{
     }
 }
 
-@Composable fun MainView() = App()
+@Composable fun MainView(message: StateFlow<PlatformEvent>) = App(message)
 
 fun messageReceived(message: String) = onMessageReceived(message)
 

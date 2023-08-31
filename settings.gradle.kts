@@ -2,6 +2,7 @@ rootProject.name = "ChitChat"
 
 include(":androidApp")
 include(":shared")
+include(":voskmodel")
 
 pluginManagement {
     repositories {
@@ -36,4 +37,3 @@ dependencyResolutionManagement {
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     }
 }
-include(":voskmodel")

@@ -7,7 +7,7 @@ object Dependencies {
     const val ktorContentNegitiation = "io.ktor:ktor-server-content-negotiation:$ktorVersion"
     const val kotlinxJson = "io.ktor:ktor-serialization-kotlinx-json:$ktorVersion"
 
-    const val kotlinSerializationVer = "1.6.0"
+    const val kotlinSerializationVer = "1.9.0"
     const val kotlinSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:${kotlinSerializationVer}"
 
     const val kotlinDateTime = "org.jetbrains.kotlinx:kotlinx-datetime:0.4.0"

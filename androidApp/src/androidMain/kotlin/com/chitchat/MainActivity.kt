@@ -6,14 +6,18 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import errorOnRecognizer
-import messageReceived
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import model.PlatformEvent
 import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
 import org.vosk.android.StorageService
-import timeoutOnRecognizer
 import java.io.IOException
 import java.lang.Exception
 
@@ -21,6 +25,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     private var model: Model? = null
     private var speechService: SpeechService? = null
+    private val viewModel = EventViewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,7 +35,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
         initModel()
         setContent {
-            MainView()
+            MainView(viewModel.event)
         }
     }
 
@@ -69,24 +74,24 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     override fun onPartialResult(hypothesis: String?) {
-        Log.d("MainActivity", "$hypothesis")
-        hypothesis?.let { messageReceived(it) }
+//        Log.d("MainActivity", "$hypothesis")
+        hypothesis?.let { viewModel.onEvent(it) }
     }
 
     override fun onResult(hypothesis: String?) {
-        hypothesis?.let { messageReceived(it) }
+        hypothesis?.let { viewModel.onEvent(it) }
     }
 
     override fun onFinalResult(hypothesis: String?) {
-        hypothesis?.let { messageReceived(it) }
+        hypothesis?.let { viewModel.onEvent(it) }
     }
 
     override fun onError(exception: Exception?) {
-        exception?.let { errorOnRecognizer(it) }
+        exception?.let { viewModel.onEvent(e = it) }
     }
 
     override fun onTimeout() {
-        timeoutOnRecognizer()
+        viewModel.onEvent(timeOut = true)
     }
 }
 

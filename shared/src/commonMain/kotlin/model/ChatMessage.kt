@@ -10,5 +10,5 @@ data class ChatMessage(
     val id: UUID = UUID.generateUUID(),
     val timeStamp: Long = Clock.System.now().epochSeconds,
     var message: String,
-    val user: String
+    val user: String = "audience"
 )

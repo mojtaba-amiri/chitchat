@@ -3,8 +3,10 @@ plugins {
     kotlin("native.cocoapods")
     id("com.android.library")
     id("org.jetbrains.compose")
-    kotlin("plugin.serialization") version Dependencies.kotlinSerializationVer
+    kotlin("plugin.serialization") version "1.9.0" //Dependencies.kotlinSerializationVer
+//    kotlin("plugin.serialization") version Dependencies.kotlinSerializationVer
 }
+
 
 kotlin {
     androidTarget()
@@ -37,7 +39,7 @@ kotlin {
                 implementation(Dependencies.kamel)
                 implementation(Dependencies.ktorCore)
                 implementation(Dependencies.ktorContentNegitiation)
-                implementation(Dependencies.kotlinSerialization)
+//                implementation(Dependencies.kotlinSerialization)
                 implementation(Dependencies.kotlinDateTime)
                 implementation(Dependencies.kotlinUuid)
 
@@ -45,6 +47,9 @@ kotlin {
                 api(Dependencies.mokoMvvmFlow)
                 api(Dependencies.mokoMvvmCompose)
                 api(Dependencies.mokoMvvmComposeFlow)
+
+                implementation("co.touchlab:kermit:2.0.0-RC5")
+                api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
                 implementation(Dependencies.koinCore)
                 implementation(Dependencies.koinTest)
