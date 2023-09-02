@@ -16,10 +16,10 @@ kotlin {
     iosSimulatorArm64()
 
     cocoapods {
-        version = Dependencies.iOS.version
-        summary = Dependencies.iOS.summary
-        homepage = Dependencies.iOS.homePage
-        ios.deploymentTarget = Dependencies.iOS.deployTarget
+        version = Deps.iOS.version
+        summary = Deps.iOS.summary
+        homepage = Deps.iOS.homePage
+        ios.deploymentTarget = Deps.iOS.deployTarget
         podfile = project.file("../iosApp/Podfile")
         framework {
             baseName = "MultiPlatformLibrary"
@@ -31,39 +31,56 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+
+                // Compose Multiplatform
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.components.resources)
-                implementation(Dependencies.kamel)
-                implementation(Dependencies.ktorCore)
-                implementation(Dependencies.ktorContentNegitiation)
-//                implementation(Dependencies.kotlinSerialization)
-                implementation(Dependencies.kotlinDateTime)
-                implementation(Dependencies.kotlinUuid)
 
-                api(Dependencies.mokoMvvmCore)
-                api(Dependencies.mokoMvvmFlow)
-                api(Dependencies.mokoMvvmCompose)
-                api(Dependencies.mokoMvvmComposeFlow)
+                // Ktor
+                implementation(Deps.ktorCore)
+                implementation(Deps.ktorContentNegitiation)
 
-                implementation("co.touchlab:kermit:2.0.0-RC5")
-                api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+                // Serializations
+                implementation(Deps.kotlinSerialization)
+                implementation(Deps.kotlinDateTime)
+                implementation(Deps.kotlinUuid)
 
-                implementation(Dependencies.koinCore)
-                implementation(Dependencies.koinTest)
+                // Image Loading
+                implementation(Deps.kamel)
+
+                // MVVM
+                api(Deps.mokoMvvmCore)
+                api(Deps.mokoMvvmFlow)
+                api(Deps.mokoMvvmCompose)
+                api(Deps.mokoMvvmComposeFlow)
+
+                // Logging
+                implementation(Deps.kermit)
+
+                // Navigator
+                implementation(Deps.voyager)
+                // BottomSheetNavigator
+                implementation(Deps.voyagerNav)
+                // Navigation Transitions
+                implementation(Deps.voyagerTransitions)
+
+                // Koin DI
+                implementation(Deps.koinCore)
+                implementation(Deps.koinTest)
 
             }
         }
         val androidMain by getting {
             dependencies {
-                api(Dependencies.Android.compose)
-                api(Dependencies.Android.appCompat)
-                api(Dependencies.Android.coreKtx)
-                api(Dependencies.Android.ktorCore)
-                api(Dependencies.Android.koin)
-                api(Dependencies.Android.koinCompose)
+                api(Deps.Android.compose)
+                api(Deps.Android.appCompat)
+                api(Deps.Android.coreKtx)
+                api(Deps.Android.ktorCore)
+                api(Deps.Android.koin)
+                api(Deps.Android.koinCompose)
 
                 api("net.java.dev.jna:jna:5.13.0@aar")
                 api("com.alphacephei:vosk-android:0.3.47@aar")
@@ -79,23 +96,23 @@ kotlin {
             iosSimulatorArm64Main.dependsOn(this)
 
             dependencies {
-                implementation(Dependencies.iOS.ktorCore)
+                implementation(Deps.iOS.ktorCore)
             }
         }
     }
 }
 
 android {
-    compileSdk = Dependencies.Android.compileSdk
-    namespace = Dependencies.Android.namespace
+    compileSdk = Deps.Android.compileSdk
+    namespace = Deps.Android.namespace
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     sourceSets["main"].res.srcDirs("src/androidMain/res")
     sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
-        minSdk = Dependencies.Android.minSdk
-        targetSdk = Dependencies.Android.targetSdk
+        minSdk = Deps.Android.minSdk
+        targetSdk = Deps.Android.targetSdk
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
