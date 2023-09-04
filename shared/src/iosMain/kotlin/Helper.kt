@@ -1,4 +1,4 @@
-import di.appModule
+import com.chitchat.common.di.appModule
 import org.koin.core.context.startKoin
 
 fun initKoin()  = startKoin {

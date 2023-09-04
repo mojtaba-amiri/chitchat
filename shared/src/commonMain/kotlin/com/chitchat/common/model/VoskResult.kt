@@ -1,4 +1,4 @@
-package model
+package com.chitchat.common.model
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString

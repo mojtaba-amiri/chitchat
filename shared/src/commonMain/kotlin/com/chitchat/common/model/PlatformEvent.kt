@@ -1,4 +1,4 @@
-package model
+package com.chitchat.common.model
 
 data class PlatformEvent(
     val message: String = "",

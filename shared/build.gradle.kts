@@ -4,9 +4,17 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.compose")
     kotlin("plugin.serialization") version "1.9.0" //Dependencies.kotlinSerializationVer
+    id("dev.icerock.mobile.multiplatform-resources")
 //    kotlin("plugin.serialization") version Dependencies.kotlinSerializationVer
 }
 
+multiplatformResources {
+    multiplatformResourcesPackage = "com.chitchat.common" // required
+//    multiplatformResourcesClassName = "SharedRes" // optional, default MR
+//    multiplatformResourcesVisibility = MRVisibility.Internal // optional, default Public
+    iosBaseLocalizationRegion = "en" // optional, default "en"
+    multiplatformResourcesSourceSet = "commonMain"  // optional, default "commonMain"
+}
 
 kotlin {
     androidTarget()
@@ -24,6 +32,8 @@ kotlin {
         framework {
             baseName = "MultiPlatformLibrary"
             isStatic = true
+            export("dev.icerock.moko:resources:0.23.0")
+            export("dev.icerock.moko:graphics:0.9.0") // toUIColor here
         }
         extraSpecAttributes["resources"] = "['src/commonMain/resources/**', 'src/iosMain/resources/**']"
     }
@@ -41,7 +51,9 @@ kotlin {
 
                 // Ktor
                 implementation(Deps.ktorCore)
+                implementation(Deps.ktorContentCIO)
                 implementation(Deps.ktorContentNegitiation)
+                implementation(Deps.ktorSerialization)
 
                 // Serializations
                 implementation(Deps.kotlinSerialization)
@@ -50,6 +62,10 @@ kotlin {
 
                 // Image Loading
                 implementation(Deps.kamel)
+
+                // MultiPlatform Resources
+                api(Deps.mokoResources)
+                api(Deps.mokoResourcesCompose)
 
                 // MVVM
                 api(Deps.mokoMvvmCore)
@@ -60,7 +76,7 @@ kotlin {
                 // Logging
                 implementation(Deps.kermit)
 
-                // Navigator
+                // Navigation
                 implementation(Deps.voyager)
                 // BottomSheetNavigator
                 implementation(Deps.voyagerNav)

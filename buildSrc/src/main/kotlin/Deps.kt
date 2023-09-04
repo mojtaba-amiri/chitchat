@@ -4,7 +4,10 @@ object Deps {
 
     const val ktorVersion = "2.3.3"
     const val ktorCore = "io.ktor:ktor-client-core:$ktorVersion"
-    const val ktorContentNegitiation = "io.ktor:ktor-server-content-negotiation:$ktorVersion"
+    const val ktorContentCIO = "io.ktor:ktor-client-cio:$ktorVersion"
+    const val ktorContentNegitiation = "io.ktor:ktor-client-content-negotiation:$ktorVersion"
+    const val ktorSerialization = "io.ktor:ktor-serialization-kotlinx-json:$ktorVersion"
+
     const val kotlinxJson = "io.ktor:ktor-serialization-kotlinx-json:$ktorVersion"
 
     const val kotlinSerializationVer = "1.6.0"
@@ -18,6 +21,10 @@ object Deps {
     const val mokoMvvmFlow = "dev.icerock.moko:mvvm-flow:$mokoVersion"
     const val mokoMvvmCompose = "dev.icerock.moko:mvvm-compose:$mokoVersion"
     const val mokoMvvmComposeFlow = "dev.icerock.moko:mvvm-flow-compose:$mokoVersion"
+
+    private const val mokoResourcesVersion = "0.23.0"
+    const val mokoResources = "dev.icerock.moko:resources:$mokoResourcesVersion"
+    const val mokoResourcesCompose = "dev.icerock.moko:resources-compose:$mokoResourcesVersion"
 
     private const val kermitVersion = "2.0.0-RC5"
     const val kermit = "co.touchlab:kermit:$kermitVersion"

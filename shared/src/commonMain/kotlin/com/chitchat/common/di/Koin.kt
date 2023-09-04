@@ -1,4 +1,4 @@
-package di
+package com.chitchat.common.di
 
 import org.koin.dsl.module
 

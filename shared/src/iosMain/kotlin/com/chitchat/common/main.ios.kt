@@ -1,8 +1,10 @@
-import androidx.compose.runtime.Composable
-import kotlinx.coroutines.flow.StateFlow
-import model.PlatformEvent
+package com.chitchat.common
 
-actual fun getPlatformName(): String = "Android"
+import androidx.compose.ui.window.ComposeUIViewController
+import kotlinx.coroutines.flow.StateFlow
+import com.chitchat.common.model.PlatformEvent
+
+actual fun getPlatformName(): String = "iOS"
 
 actual fun getPlatformSpecificEvent() = PlatformSpecificEvent()
 
@@ -19,10 +21,4 @@ actual class PlatformSpecificEvent{
     }
 }
 
-@Composable fun MainView(message: StateFlow<PlatformEvent>) = App(message)
-
-fun messageReceived(message: String) = onMessageReceived(message)
-
-fun errorOnRecognizer(e: Exception) = onRecognizerError(e)
-
-fun timeoutOnRecognizer() = onRecognizerTimeOut()
+fun MainViewController(event: StateFlow<PlatformEvent>) = ComposeUIViewController { App(event) }

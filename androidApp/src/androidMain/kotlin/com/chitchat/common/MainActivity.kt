@@ -1,18 +1,8 @@
-package com.chitchat
+package com.chitchat.common
 
-import MainView
-import PlatformSpecificEvent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import errorOnRecognizer
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import model.PlatformEvent
 import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
@@ -46,7 +36,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun initModel() {
-        StorageService.unpack(this, "model-en-us", "model",
+        StorageService.unpack(this, "model-en-us", "com/chitchat/common/model",
             { model: Model? -> this.model = model }
         ) { exception: IOException ->
             errorOnRecognizer(exception)

@@ -20,7 +20,7 @@ kotlin {
 
 android {
     compileSdk = (findProperty("android.compileSdk") as String).toInt()
-    namespace = "com.chitchat"
+    namespace = "com.chitchat.common"
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
 

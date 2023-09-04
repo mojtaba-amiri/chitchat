@@ -1,4 +1,4 @@
-package model
+package com.chitchat.common.model
 
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
