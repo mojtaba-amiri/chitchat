@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <resources>
     <string name="getting_answer">Getting Answer</string>
+    <string name="end_interview">End Interview</string>
+    <string name="start_interview">Start Interview</string>
+    <string name="gpt_answer">GPT Answer</string>
 </resources>

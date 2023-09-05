@@ -14,6 +14,9 @@ import dev.icerock.moko.resources.StringResource
 public actual object MR {
     public actual object strings : ResourceContainer<StringResource> {
         public actual val getting_answer: StringResource = StringResource(R.string.getting_answer)
+        public actual val end_interview: StringResource = StringResource(R.string.end_interview)
+        public actual val start_interview: StringResource = StringResource(R.string.start_interview)
+        public actual val gpt_answer: StringResource = StringResource(R.string.gpt_answer)
     }
 
     public actual object plurals : ResourceContainer<PluralsResource>

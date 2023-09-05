@@ -49,6 +49,8 @@ object Deps {
         const val coreKtx = "androidx.core:core-ktx:1.9.0"
         const val appCompat = "androidx.appcompat:appcompat:1.6.1"
         const val compose = "androidx.activity:activity-compose:1.6.1"
+        const val composeUI = "androidx.compose.ui:ui:1.1.0"
+        const val composeMaterial = "androidx.compose.material:material:1.5.0-rc01"
         const val ktorCore = "io.ktor:ktor-client-android:$ktorVersion"
 
         const val koin = "io.insert-koin:koin-android:3.4.3"
