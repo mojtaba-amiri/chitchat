@@ -13,7 +13,7 @@ object Deps {
     const val kotlinSerializationVer = "1.6.0"
     const val kotlinSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:${kotlinSerializationVer}"
 
-    const val kotlinDateTime = "org.jetbrains.kotlinx:kotlinx-datetime:0.4.0"
+    const val kotlinDateTime = "org.jetbrains.kotlinx:kotlinx-datetime:0.4.1"
     const val kotlinUuid = "app.softwork:kotlinx-uuid-core:0.0.21"
 
     private const val mokoVersion = "0.16.1"
@@ -40,7 +40,7 @@ object Deps {
 
     private const val firebaseKotlinVersion = "1.9.0"
     const val firebaseAuth = "dev.gitlive:firebase-auth:$firebaseKotlinVersion"
-
+//
     object Android {
         const val minSdk = 24
         const val targetSdk = 33

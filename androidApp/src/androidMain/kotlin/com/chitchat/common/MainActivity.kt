@@ -1,8 +1,10 @@
 package com.chitchat.common
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import com.chitchat.common.model.EventType
 import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
@@ -37,7 +39,10 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     private fun initModel() {
         StorageService.unpack(this, "model-en-us", "com/chitchat/common/model",
-            { model: Model? -> this.model = model }
+            { model: Model? ->
+                this.model = model
+                Log.e("VoskModel","Model Loaded" )
+            }
         ) { exception: IOException ->
             errorOnRecognizer(exception)
         }
@@ -65,7 +70,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     override fun onPartialResult(hypothesis: String?) {
 //        Log.d("MainActivity", "$hypothesis")
-        hypothesis?.let { viewModel.onEvent(it) }
+        hypothesis?.let { viewModel.onEvent(it, eType = "Recognizer") }
     }
 
     override fun onResult(hypothesis: String?) {
@@ -82,6 +87,10 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     override fun onTimeout() {
         viewModel.onEvent(timeOut = true)
+    }
+
+    override fun onBackPressed() {
+        viewModel.onEvent(msg = "BackPress", eType = "UserEvent")
     }
 }
 

@@ -17,17 +17,31 @@ public actual object MR {
         public actual val end_interview: StringResource = StringResource(R.string.end_interview)
         public actual val start_interview: StringResource = StringResource(R.string.start_interview)
         public actual val gpt_answer: StringResource = StringResource(R.string.gpt_answer)
+        public actual val start_conversation: StringResource = StringResource(R.string.start_conversation)
+        public actual val onboard1_title: StringResource = StringResource(R.string.onboard1_title)
+        public actual val onboard2_title: StringResource = StringResource(R.string.onboard2_title)
+        public actual val onboard2_desc: StringResource = StringResource(R.string.onboard2_desc)
+        public actual val next: StringResource = StringResource(R.string.next)
+        public actual val description: StringResource = StringResource(R.string.description)
+        public actual val description_chatgpt: StringResource = StringResource(R.string.description_chatgpt)
     }
 
     public actual object plurals : ResourceContainer<PluralsResource>
 
-    public actual object images : ResourceContainer<ImageResource>
+    public actual object images : ResourceContainer<ImageResource> {
+        public actual val start_conversation: ImageResource = ImageResource(R.drawable.start_conversation)
+        public actual val chatgpt2: ImageResource = ImageResource(R.drawable.chatgpt2)
+    }
 
     public actual object fonts : ResourceContainer<FontResource>
 
     public actual object files : ResourceContainer<FileResource>
 
-    public actual object colors : ResourceContainer<ColorResource>
+    public actual object colors : ResourceContainer<ColorResource>{
+        public actual val primaryColor: ColorResource = ColorResource(R.color.primaryColor)
+        public actual val secondaryColor: ColorResource = ColorResource(R.color.secondaryColor)
+        public actual val cardColor: ColorResource = ColorResource(R.color.cardColor)
+    }
 
     public actual object assets : ResourceContainer<AssetResource>
 }

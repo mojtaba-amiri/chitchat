@@ -1,4 +1,4 @@
-package com.chitchat.common.viewModel
+package com.chitchat.common.ui.screens.conversation
 
 import com.chitchat.common.getPlatformSpecificEvent
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import com.chitchat.common.model.ChatMessage
+import com.chitchat.common.model.EventType
 import com.chitchat.common.model.PlatformEvent
 import com.chitchat.common.model.VoskResult
 
@@ -36,7 +37,7 @@ data class GptAnswer(
     val id: String
 )
 
-class ChatViewModel: ViewModel() {
+class ConversationViewModel: ViewModel() {
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState = _uiState.asStateFlow()
     val httpClient: HttpClient = HttpClient(CIO) {
@@ -51,38 +52,40 @@ class ChatViewModel: ViewModel() {
 
     private fun onNewMessage(msg: PlatformEvent) {
         this.viewModelScope.launch {
-            when {
-                msg.message.isNotEmpty() -> {
-                    val newMessage = Json.decodeFromString(VoskResult.serializer(), msg.message)
-                    val current = _uiState.value.messages.toMutableList()
-                    if ((newMessage.partial != null && newMessage.partial.isBlank())) {
-                        // new paragraph
-                        if (current.lastOrNull()?.message?.isNotBlank() == true)
-                            current.add(ChatMessage(message = newMessage.partial))
-                    } else {
-                        // update last text
-                        if (newMessage.text == null) {
-                            newMessage.partial?.let {
-                                if (current.isNotEmpty()) current.removeLast()
-                                current.add(ChatMessage(message = it))
-                            }
-                        } else {
-                            // Add an empty row to the end
+            if (msg.eType == "Recognizer") {
+                when {
+                    msg.message.isNotEmpty() -> {
+                        val newMessage = Json.decodeFromString(VoskResult.serializer(), msg.message)
+                        val current = _uiState.value.messages.toMutableList()
+                        if ((newMessage.partial != null && newMessage.partial.isBlank())) {
+                            // new paragraph
                             if (current.lastOrNull()?.message?.isNotBlank() == true)
-                                current.add(ChatMessage(message = ""))
+                                current.add(ChatMessage(message = newMessage.partial))
+                        } else {
+                            // update last text
+                            if (newMessage.text == null) {
+                                newMessage.partial?.let {
+                                    if (current.isNotEmpty()) current.removeLast()
+                                    current.add(ChatMessage(message = it))
+                                }
+                            } else {
+                                // Add an empty row to the end
+                                if (current.lastOrNull()?.message?.isNotBlank() == true)
+                                    current.add(ChatMessage(message = ""))
+                            }
                         }
+                        _uiState.update { it.copy(messages = current.toList()) }
                     }
-                    _uiState.update { it.copy(messages = current.toList()) }
-                }
 
-                msg.message.isEmpty() -> { // empty string means new paragraph
-                    val all = _uiState.value.messages.toMutableList()
-                    all.add(ChatMessage(message = "", user = "audience"))
-                    _uiState.update { it.copy(messages = all.toList()) }
-                }
+                    msg.message.isEmpty() -> { // empty string means new paragraph
+                        val all = _uiState.value.messages.toMutableList()
+                        all.add(ChatMessage(message = "", user = "audience"))
+                        _uiState.update { it.copy(messages = all.toList()) }
+                    }
 
-                msg.error != null -> {
-                    // show error
+                    msg.error != null -> {
+                        // show error
+                    }
                 }
             }
         }

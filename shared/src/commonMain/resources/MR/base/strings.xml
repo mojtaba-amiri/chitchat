@@ -4,4 +4,11 @@
     <string name="end_interview">End Interview</string>
     <string name="start_interview">Start Interview</string>
     <string name="gpt_answer">GPT Answer</string>
+    <string name="start_conversation">Start Conversation</string>
+    <string name="onboard1_title">Talk to Text: Transcribe &amp; Share</string>
+    <string name="onboard2_title">ChatGPT: Your Conversation Companion</string>
+    <string name="onboard2_desc">When words escape you, let ChatGPT come to the rescue with the perfect response.</string>
+    <string name="next">Next </string>
+    <string name="description">Easily transcribe a Chat, Interview, or meeting. Then share it! </string>
+    <string name="description_chatgpt">If you were not sure what to say at any point, Use ChatGpt to give you an answer </string>
 </resources>
