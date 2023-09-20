@@ -1,9 +1,12 @@
-package com.chitchat.common
+package com.chitchat.android
 
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import com.chitchat.common.MainView
+import com.chitchat.common.PlatformSpecificEvent
+import com.chitchat.common.errorOnRecognizer
 import com.chitchat.common.model.EventType
 import org.vosk.Model
 import org.vosk.Recognizer

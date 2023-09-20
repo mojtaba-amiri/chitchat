@@ -1,4 +1,4 @@
-package com.chitchat.common
+package com.chitchat.android
 
 import androidx.lifecycle.ViewModel
 import com.chitchat.common.model.EventType

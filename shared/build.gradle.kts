@@ -130,6 +130,10 @@ android {
         minSdk = Deps.Android.minSdk
         targetSdk = Deps.Android.targetSdk
     }
+    dependencies {
+//        implementation("com.android.billingclient:billing:6.0.1")
+        implementation("com.android.billingclient:billing-ktx:6.0.1")
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
