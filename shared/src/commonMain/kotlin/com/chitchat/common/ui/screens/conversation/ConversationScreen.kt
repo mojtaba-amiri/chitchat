@@ -2,6 +2,7 @@ package com.chitchat.common.ui.screens.conversation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -20,16 +21,21 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chitchat.common.MR
 import com.chitchat.common.model.ChatMessage
 import com.chitchat.common.model.PlatformEvent
+import com.chitchat.common.ui.components.HightlightButton
 import com.chitchat.common.ui.navigator.NavigatorViewModel
+import com.chitchat.common.ui.navigator.Screen
 import dev.icerock.moko.mvvm.compose.getViewModel
 import dev.icerock.moko.mvvm.compose.viewModelFactory
 import dev.icerock.moko.resources.compose.colorResource
@@ -47,17 +53,69 @@ fun ConversationScreen(modifier: Modifier = Modifier,
     val viewModel = getViewModel("Conversation", viewModelFactory { ConversationViewModel() })
     val uiState = viewModel.uiState.collectAsState()
     viewModel.watch(platformEvent)
-    Column(
-        modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .background(color = Color.White),
-        verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.Start) {
+    val mode = remember { mutableStateOf("Portrait") }
+    BoxWithConstraints {
+        mode.value = if (maxWidth < maxHeight) "Portrait" else "Landscape"
+        if (mode.value == "Portrait") {
+            Column(
+                modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .background(color = Color.White),
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.Start
+            ) {
+                if (uiState.value.isListening) {
+                    ConversationList(uiState)
+                } else {
+                    HightlightButton(
+                        modifier = Modifier
+                            .width(200.dp)
+                            .padding(top = 20.dp),
+                        text = stringResource(MR.strings.start_conversation),
+                        onClick = { navigator.navigate(Screen.Conversation) }
+                    )
+                }
+                ActionsLayout(uiState, viewModel)
+            }
+        } else {
+            Row(modifier
+                .fillMaxWidth()
+                .fillMaxHeight()) {
+                Column(
+                    Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .background(color = Color.White),
+                    verticalArrangement = Arrangement.Bottom,
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    ConversationList(uiState)
+                }
 
+                Column(verticalArrangement = Arrangement.SpaceAround) {
+                    Button(
+                        modifier = Modifier.width(150.dp),
+                        onClick = { viewModel.onListenToggle() }
+                    ) {
+                        Text(text = if (uiState.value.isListening) stringResource(MR.strings.end_interview) else stringResource(
+                            MR.strings.start_interview)
+                        )
+                    }
 
-        ConversationList(uiState)
-        ActionsLayout(uiState, viewModel)
+                    Button(
+                        modifier = Modifier.width(150.dp),
+                        onClick = { viewModel.onGptAnswer() }
+                    ) {
+                        Text(text = if(uiState.value.isGettingAnswer) stringResource(MR.strings.getting_answer)   else stringResource(
+                            MR.strings.gpt_answer)
+                        )
+                    }
+                }
+
+            }
+
+        }
     }
 }
 
@@ -65,10 +123,10 @@ fun ConversationScreen(modifier: Modifier = Modifier,
 fun ColumnScope.ConversationList(uiState: State<ChatUiState>) {
     val lazyColumnListState = rememberLazyListState()
     val corroutineScope = rememberCoroutineScope()
+
     LazyColumn(
         state = lazyColumnListState,
         modifier = Modifier
-            .padding(30.dp)
             .weight(1f)
     ) {
         items(uiState.value.messages) {

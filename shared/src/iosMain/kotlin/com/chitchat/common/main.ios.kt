@@ -12,12 +12,20 @@ actual class PlatformSpecificEvent{
     companion object {
         var startRecognizer: (() -> Unit)? = null
         var stopRecognizer: (() -> Unit)? = null
+        var startPurchase: (() -> Unit)? = null
+        var startBillingConnection: (() -> Unit)? = null
     }
     actual fun startListen() {
         startRecognizer?.invoke()
     }
     actual fun stopListen() {
         stopRecognizer?.invoke()
+    }
+    actual fun startPurchase() {
+        startPurchase?.invoke()
+    }
+    actual fun startBillingConnection() {
+        startBillingConnection?.invoke()
     }
 }
 

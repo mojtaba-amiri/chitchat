@@ -39,3 +39,9 @@ android {
         jvmToolchain(11)
     }
 }
+dependencies {
+    implementation("com.android.billingclient:billing-ktx:6.0.1")
+    implementation("com.google.firebase:firebase-crashlytics-buildtools:2.9.9")
+    implementation("com.android.billingclient:billing:6.0.1")
+    implementation("com.google.android.gms:play-services-analytics-impl:18.0.3")
+}

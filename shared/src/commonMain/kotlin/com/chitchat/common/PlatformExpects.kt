@@ -4,4 +4,6 @@ expect fun getPlatformSpecificEvent(): PlatformSpecificEvent
 expect class PlatformSpecificEvent {
     fun startListen()
     fun stopListen()
+    fun startPurchase()
+    fun startBillingConnection()
 }

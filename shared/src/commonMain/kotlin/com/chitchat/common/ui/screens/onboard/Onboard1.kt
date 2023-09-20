@@ -49,7 +49,7 @@ fun Onboard1(modifier: Modifier = Modifier,
             )
         HightlightButton(
             modifier = Modifier
-                .width(100.dp)
+                .width(200.dp)
                 .padding(top = 20.dp),
             text = stringResource(MR.strings.next),
             onClick = { navigator.navigate(Screen.Onboard2) }

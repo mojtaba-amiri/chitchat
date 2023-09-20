@@ -35,7 +35,6 @@ fun Onboard2(modifier: Modifier = Modifier,
         verticalArrangement = Arrangement.Center
     ) {
         HeaderText(
-            modifier = Modifier.padding(top = 10.dp),
             text = stringResource(MR.strings.onboard2_title)
         )
         Image(
@@ -48,6 +47,7 @@ fun Onboard2(modifier: Modifier = Modifier,
         )
         HightlightButton(
             modifier = Modifier
+                .width(200.dp)
                 .padding(top = 20.dp),
             text = stringResource(MR.strings.start_conversation),
             onClick = { navigator.navigate(Screen.Conversation) }

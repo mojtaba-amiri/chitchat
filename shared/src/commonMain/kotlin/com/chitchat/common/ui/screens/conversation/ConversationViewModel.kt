@@ -102,6 +102,7 @@ class ConversationViewModel: ViewModel() {
 
     fun onGptAnswer() {
         // Call backend
+        getPlatformSpecificEvent().startPurchase()
         this.viewModelScope.launch {
             isGettingAnswer(true)
             val response = httpClient.get("https://mocki.io/v1/73ff907f-ffe2-4749-84b3-d1208c992e77") {
