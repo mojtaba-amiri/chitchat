@@ -1,10 +1,17 @@
 package com.chitchat.android
 
+import android.Manifest
+import android.R.attr.text
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClient.BillingResponseCode
@@ -28,13 +35,14 @@ import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
 import org.vosk.android.StorageService
 import java.io.IOException
-import java.lang.Exception
+
 
 class MainActivity : AppCompatActivity(), RecognitionListener, PurchasesUpdatedListener {
 
     private var model: Model? = null
     private var speechService: SpeechService? = null
     private val viewModel = EventViewModel()
+    private var permissionToRecordAccepted = false
 
     companion object {
         const val SUBSCRIPTION_NAME = "one_month_subscription"
@@ -56,6 +64,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PurchasesUpdatedL
         PlatformSpecificEvent.stopRecognizer = { stopListen() }
         PlatformSpecificEvent.startBillingConnection = { startBillingConnection() }
         PlatformSpecificEvent.startPurchase = { startPurchase() }
+        PlatformSpecificEvent.shareAsTextFile =  { txt, name -> shareAsTextFile(txt, name) }
 
         initModel()
         setContent {
@@ -66,7 +75,31 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PurchasesUpdatedL
     override fun onResume() {
         super.onResume()
         startBillingConnection()
+        checkPermission()
     }
+
+    private fun checkPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf( Manifest.permission.RECORD_AUDIO), 1001)
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        permissionToRecordAccepted = if (requestCode == 1001) {
+            grantResults[0] == PackageManager.PERMISSION_GRANTED
+        } else {
+            false
+        }
+        if (!permissionToRecordAccepted) {
+            Toast.makeText(this, "This app needs audio recording permission. Please grant this permission.", Toast.LENGTH_LONG).show()
+        }
+    }
+
 
     private fun startBillingConnection() {
         billingClient.startConnection(object : BillingClientStateListener {
@@ -201,6 +234,38 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PurchasesUpdatedL
     private fun stopListen() {
         speechService?.stop()
         speechService = null
+    }
+
+    private fun shareAsTextFile(txt: String, name: String) {
+        try {
+            val sharingIntent = Intent(Intent.ACTION_SEND)
+            sharingIntent.type = "text/plain"
+            sharingIntent.putExtra(Intent.EXTRA_TEXT, txt)
+            startActivity(sharingIntent)
+//            val fileName = "${name}.txt"
+//            this.write(txt, fileName)
+//            val file = File(filesDir, fileName)
+//            val fileUri: Uri? =
+//                FileProvider.getUriForFile(
+//                    this@MainActivity,
+//                    "com.chitchat.android.fileprovider",
+//                    file
+//                )
+//            fileUri?.let {
+//                val intent = Intent()
+//                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+////                intent.setDataAndType(fileUri, contentResolver.getType(fileUri))
+////                intent.type = "text/*"
+//                startActivity(intent)
+//            }
+        } catch (e: IllegalArgumentException) {
+                Log.e("File Selector",
+                    "The selected file can't be shared: $name")
+            Toast.makeText(this, "Error Sharing file", Toast.LENGTH_LONG).show()
+        }
+        catch (e: Exception) {
+            Toast.makeText(this, "Error Sharing file", Toast.LENGTH_LONG).show()
+        }
     }
 
     override fun onPartialResult(hypothesis: String?) {

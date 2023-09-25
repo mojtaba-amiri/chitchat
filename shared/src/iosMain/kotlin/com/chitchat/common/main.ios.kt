@@ -14,6 +14,7 @@ actual class PlatformSpecificEvent{
         var stopRecognizer: (() -> Unit)? = null
         var startPurchase: (() -> Unit)? = null
         var startBillingConnection: (() -> Unit)? = null
+        var shareAsTextFile: ((txt:String, name:String) -> Unit)? = null
     }
     actual fun startListen() {
         startRecognizer?.invoke()
@@ -26,6 +27,10 @@ actual class PlatformSpecificEvent{
     }
     actual fun startBillingConnection() {
         startBillingConnection?.invoke()
+    }
+
+    actual fun shareAsTextFile(txt:String, name:String) {
+        shareAsTextFile?.invoke(txt, name)
     }
 }
 

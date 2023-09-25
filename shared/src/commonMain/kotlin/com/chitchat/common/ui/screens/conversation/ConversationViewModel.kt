@@ -22,6 +22,9 @@ import com.chitchat.common.model.ChatMessage
 import com.chitchat.common.model.EventType
 import com.chitchat.common.model.PlatformEvent
 import com.chitchat.common.model.VoskResult
+import com.chitchat.common.model.toShortLocalDateTime
+import com.chitchat.common.model.toShortLocalTime
+import kotlinx.datetime.Clock
 
 
 @Serializable
@@ -60,18 +63,25 @@ class ConversationViewModel: ViewModel() {
                         if ((newMessage.partial != null && newMessage.partial.isBlank())) {
                             // new paragraph
                             if (current.lastOrNull()?.message?.isNotBlank() == true)
-                                current.add(ChatMessage(message = newMessage.partial))
+                                current.add(ChatMessage(message = newMessage.partial,
+                                    endTime = Clock.System.now().toShortLocalTime()))
                         } else {
                             // update last text
                             if (newMessage.text == null) {
                                 newMessage.partial?.let {
-                                    if (current.isNotEmpty()) current.removeLast()
-                                    current.add(ChatMessage(message = it))
+                                    var time = Clock.System.now().toShortLocalTime()
+                                    if (current.isNotEmpty()) {
+                                        time = current.last().time
+                                        current.removeLast()
+                                    }
+                                    current.add(ChatMessage(message = it, time = time,
+                                        endTime = Clock.System.now().toShortLocalTime()))
                                 }
                             } else {
                                 // Add an empty row to the end
                                 if (current.lastOrNull()?.message?.isNotBlank() == true)
-                                    current.add(ChatMessage(message = ""))
+                                    current.add(ChatMessage(message = "",
+                                        endTime = Clock.System.now().toShortLocalTime()))
                             }
                         }
                         _uiState.update { it.copy(messages = current.toList()) }
@@ -79,7 +89,8 @@ class ConversationViewModel: ViewModel() {
 
                     msg.message.isEmpty() -> { // empty string means new paragraph
                         val all = _uiState.value.messages.toMutableList()
-                        all.add(ChatMessage(message = "", user = "audience"))
+                        all.add(ChatMessage(message = "", user = "audience",
+                            endTime = Clock.System.now().toShortLocalTime()))
                         _uiState.update { it.copy(messages = all.toList()) }
                     }
 
@@ -100,6 +111,13 @@ class ConversationViewModel: ViewModel() {
         _uiState.update { it.copy(isListening = !isListening) }
     }
 
+    fun onShare() {
+        val allText = _uiState.value.messages.map { it.message }.joinToString(separator = "\n")
+        getPlatformSpecificEvent().shareAsTextFile(
+            allText, "file"
+            )// Clock.System.now().toShortLocalDateTime(true)
+    }
+
     fun onGptAnswer() {
         // Call backend
         getPlatformSpecificEvent().startPurchase()
@@ -111,7 +129,9 @@ class ConversationViewModel: ViewModel() {
             if (response.status == HttpStatusCode.OK) {
                 val answer: GptAnswer = response.body()
                 isGettingAnswer(false)
-                addMessageList(ChatMessage(message = answer.answer, user = "AI"))
+                addMessageList(ChatMessage(message = answer.answer,
+                    user = "AI",
+                    endTime = Clock.System.now().toShortLocalTime()))
             }
         }
     }

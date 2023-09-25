@@ -5,17 +5,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +44,7 @@ import com.chitchat.common.ui.navigator.Screen
 import dev.icerock.moko.mvvm.compose.getViewModel
 import dev.icerock.moko.mvvm.compose.viewModelFactory
 import dev.icerock.moko.resources.compose.colorResource
+import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -145,23 +151,67 @@ fun ActionsLayout(uiState: State<ChatUiState>, viewModel: ConversationViewModel)
     Row(
         modifier= Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceAround) {
-        Button(
-            modifier = Modifier.width(150.dp),
-            onClick = { viewModel.onListenToggle() }
-        ) {
-            Text(text = if (uiState.value.isListening) stringResource(MR.strings.end_interview) else stringResource(
-                MR.strings.start_interview)
-            )
+
+        Column (horizontalAlignment = Alignment.CenterHorizontally){
+            IconButton(
+                onClick = { viewModel.onListenToggle() }
+            ) {
+                if (!uiState.value.isListening) {
+                    Icon(
+                        modifier = Modifier.size(40.dp),
+                        painter = painterResource(MR.images.ic_play),
+                        tint = colorResource(MR.colors.primaryColor),
+                        contentDescription = null
+                    )
+                } else {
+                    Icon(
+                        modifier = Modifier.size(40.dp),
+                        painter = painterResource(MR.images.ic_stop),
+                        tint = Color.Red,
+                        contentDescription = null
+                    )
+                }
+            }
+
+            if (!uiState.value.isListening) {
+                Text(text = stringResource(MR.strings.start_interview),
+                    fontSize = 14.sp)
+            } else {
+                Text(text = stringResource(MR.strings.end_interview),
+                    fontSize = 14.sp)
+            }
         }
 
-        Button(
-            modifier = Modifier.width(150.dp),
-            onClick = { viewModel.onGptAnswer() }
-        ) {
-            Text(text = if(uiState.value.isGettingAnswer) stringResource(MR.strings.getting_answer)   else stringResource(
-                MR.strings.gpt_answer)
-            )
+        Column (horizontalAlignment = Alignment.CenterHorizontally) {
+            IconButton(
+                onClick = { viewModel.onShare() }
+            ) {
+                Icon(
+                    modifier = Modifier.size(40.dp),
+                    painter = painterResource(MR.images.ic_share),
+                    tint = colorResource(MR.colors.primaryColor),
+                    contentDescription = null
+                )
+            }
+            Text(text = stringResource(MR.strings.share),
+                fontSize = 14.sp)
         }
+
+        Column (horizontalAlignment = Alignment.CenterHorizontally){
+            IconButton(
+                onClick = { viewModel.onGptAnswer() }
+            ) {
+                Icon(
+                    modifier = Modifier.size(40.dp),
+                    painter = painterResource(MR.images.ic_gpt),
+                    tint = colorResource(MR.colors.primaryColor),
+                    contentDescription = null
+                )
+            }
+            Text(text = stringResource(MR.strings.gpt_answer),
+                fontSize = 14.sp)
+        }
+
     }
 }
 

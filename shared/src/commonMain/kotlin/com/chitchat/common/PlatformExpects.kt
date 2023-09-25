@@ -6,4 +6,5 @@ expect class PlatformSpecificEvent {
     fun stopListen()
     fun startPurchase()
     fun startBillingConnection()
+    fun shareAsTextFile(txt:String, name:String)
 }
