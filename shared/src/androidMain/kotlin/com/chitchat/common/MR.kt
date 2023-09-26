@@ -17,6 +17,7 @@ public actual object MR {
         public actual val end_interview: StringResource = StringResource(R.string.end_interview)
         public actual val start_interview: StringResource = StringResource(R.string.start_interview)
         public actual val gpt_answer: StringResource = StringResource(R.string.gpt_answer)
+        public actual val gpt_summarize: StringResource = StringResource(R.string.gpt_summarize)
         public actual val start_conversation: StringResource = StringResource(R.string.start_conversation)
         public actual val onboard1_title: StringResource = StringResource(R.string.onboard1_title)
         public actual val onboard2_title: StringResource = StringResource(R.string.onboard2_title)
@@ -25,6 +26,7 @@ public actual object MR {
         public actual val share: StringResource = StringResource(R.string.share)
         public actual val description: StringResource = StringResource(R.string.description)
         public actual val description_chatgpt: StringResource = StringResource(R.string.description_chatgpt)
+        public actual val instructions: StringResource = StringResource(R.string.instructions)
     }
 
     public actual object plurals : ResourceContainer<PluralsResource>
@@ -36,6 +38,8 @@ public actual object MR {
         public actual val ic_share: ImageResource = ImageResource(R.drawable.ic_share)
         public actual val ic_play: ImageResource = ImageResource(R.drawable.ic_play)
         public actual val ic_stop: ImageResource = ImageResource(R.drawable.ic_stop)
+        public actual val ic_summarize: ImageResource = ImageResource(R.drawable.ic_summarize)
+        public actual val ic_chat: ImageResource = ImageResource(R.drawable.ic_chat)
     }
 
     public actual object fonts : ResourceContainer<FontResource>

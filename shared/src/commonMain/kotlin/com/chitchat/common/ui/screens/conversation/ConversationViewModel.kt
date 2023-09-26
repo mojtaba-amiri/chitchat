@@ -118,6 +118,10 @@ class ConversationViewModel: ViewModel() {
             )// Clock.System.now().toShortLocalDateTime(true)
     }
 
+    fun onSummarize() {
+
+    }
+
     fun onGptAnswer() {
         // Call backend
         getPlatformSpecificEvent().startPurchase()

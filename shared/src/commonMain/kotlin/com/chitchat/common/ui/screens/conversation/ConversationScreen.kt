@@ -1,13 +1,15 @@
 package com.chitchat.common.ui.screens.conversation
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,8 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -32,12 +32,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chitchat.common.MR
 import com.chitchat.common.model.ChatMessage
 import com.chitchat.common.model.PlatformEvent
+import com.chitchat.common.ui.components.BodyText
 import com.chitchat.common.ui.components.HightlightButton
 import com.chitchat.common.ui.navigator.NavigatorViewModel
 import com.chitchat.common.ui.navigator.Screen
@@ -71,18 +74,12 @@ fun ConversationScreen(modifier: Modifier = Modifier,
                 verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.Start
             ) {
-                if (uiState.value.isListening) {
+                if (uiState.value.messages.isNotEmpty()) {
                     ConversationList(uiState)
                 } else {
-                    HightlightButton(
-                        modifier = Modifier
-                            .width(200.dp)
-                            .padding(top = 20.dp),
-                        text = stringResource(MR.strings.start_conversation),
-                        onClick = { navigator.navigate(Screen.Conversation) }
-                    )
+                    EmptyConversation(viewModel, navigator)
                 }
-                ActionsLayout(uiState, viewModel)
+                ActionsLayoutHorizontal(uiState, viewModel)
             }
         } else {
             Row(modifier
@@ -98,27 +95,7 @@ fun ConversationScreen(modifier: Modifier = Modifier,
                 ) {
                     ConversationList(uiState)
                 }
-
-                Column(verticalArrangement = Arrangement.SpaceAround) {
-                    Button(
-                        modifier = Modifier.width(150.dp),
-                        onClick = { viewModel.onListenToggle() }
-                    ) {
-                        Text(text = if (uiState.value.isListening) stringResource(MR.strings.end_interview) else stringResource(
-                            MR.strings.start_interview)
-                        )
-                    }
-
-                    Button(
-                        modifier = Modifier.width(150.dp),
-                        onClick = { viewModel.onGptAnswer() }
-                    ) {
-                        Text(text = if(uiState.value.isGettingAnswer) stringResource(MR.strings.getting_answer)   else stringResource(
-                            MR.strings.gpt_answer)
-                        )
-                    }
-                }
-
+                ActionsLayoutVertical(uiState, viewModel)
             }
 
         }
@@ -147,77 +124,145 @@ fun ColumnScope.ConversationList(uiState: State<ChatUiState>) {
 }
 
 @Composable
-fun ActionsLayout(uiState: State<ChatUiState>, viewModel: ConversationViewModel) {
+fun ColumnScope.EmptyConversation(
+    viewModel: ConversationViewModel,
+    navigator: NavigatorViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painter = painterResource(MR.images.ic_chat),
+            contentDescription = null
+        )
+        BodyText(
+            modifier = Modifier
+                .width(300.dp)
+                .padding(top = 10.dp),
+            text = stringResource(MR.strings.instructions)
+        )
+        HightlightButton(
+            modifier = Modifier
+                .width(200.dp)
+                .padding(top = 20.dp),
+            text = stringResource(MR.strings.start_conversation),
+            onClick = { viewModel.onListenToggle() }
+        )
+    }
+}
+
+
+
+@Composable
+fun ActionsLayoutVertical(uiState: State<ChatUiState>, viewModel: ConversationViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxHeight()
+            .padding(10.dp)
+            .defaultMinSize(minWidth = 150.dp),
+        verticalArrangement = Arrangement.SpaceAround,
+        horizontalAlignment = Alignment.CenterHorizontally) {
+
+        ActionIcons(uiState, viewModel)
+    }
+}
+
+@Composable
+fun ActionIcons(uiState: State<ChatUiState>, viewModel: ConversationViewModel) {
+
+    IconTextButton(
+        onClick = { if (uiState.value.messages.isNotEmpty()) viewModel.onShare() },
+        icon = painterResource(MR.images.ic_share),
+        text = stringResource(MR.strings.share),
+        tintColor = if (uiState.value.messages.isNotEmpty())
+            colorResource(MR.colors.primaryColor)
+        else
+            Color.Gray
+    )
+
+    IconTextButton(
+        onClick = { if (uiState.value.messages.isNotEmpty()) viewModel.onSummarize() },
+        icon = painterResource(MR.images.ic_summarize),
+        text = stringResource(MR.strings.gpt_summarize),
+        tintColor = if (uiState.value.messages.isNotEmpty())
+            colorResource(MR.colors.primaryColor)
+        else
+            Color.Gray
+    )
+
+    IconTextButton(
+        onClick = { if (uiState.value.messages.isNotEmpty()) viewModel.onGptAnswer() },
+        icon = painterResource(MR.images.ic_gpt),
+        text = stringResource(MR.strings.gpt_answer),
+        tintColor = if (uiState.value.messages.isNotEmpty())
+            colorResource(MR.colors.primaryColor)
+        else
+            Color.Gray
+    )
+
+    IconTextButton(
+        onClick = { viewModel.onListenToggle() },
+
+        icon = if (!uiState.value.isListening)
+            painterResource(MR.images.ic_play)
+        else
+            painterResource(MR.images.ic_stop),
+
+        text = if (!uiState.value.isListening)
+            stringResource(MR.strings.start_interview)
+        else
+            stringResource(MR.strings.end_interview),
+
+        tintColor = if (!uiState.value.isListening)
+            colorResource(MR.colors.primaryColor)
+        else
+            Color.Red
+    )
+}
+
+@Composable
+fun IconTextButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    icon: Painter,
+    text: String,
+    iconSize: Dp = 40.dp,
+    tintColor: Color = colorResource(MR.colors.primaryColor),
+    textSize: TextUnit = 14.sp
+) {
+    Column (
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally) {
+        IconButton(
+            onClick = { onClick() }
+        ) {
+            Icon(
+                modifier = Modifier.size(iconSize),
+                painter = icon,
+                tint = tintColor,
+                contentDescription = null
+            )
+        }
+        Text(text = text, fontSize = textSize)
+    }
+}
+
+@Composable
+fun ActionsLayoutHorizontal(uiState: State<ChatUiState>, viewModel: ConversationViewModel) {
     Row(
-        modifier= Modifier.fillMaxWidth(),
+        modifier= Modifier
+            .padding(10.dp)
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceAround) {
-
-        Column (horizontalAlignment = Alignment.CenterHorizontally){
-            IconButton(
-                onClick = { viewModel.onListenToggle() }
-            ) {
-                if (!uiState.value.isListening) {
-                    Icon(
-                        modifier = Modifier.size(40.dp),
-                        painter = painterResource(MR.images.ic_play),
-                        tint = colorResource(MR.colors.primaryColor),
-                        contentDescription = null
-                    )
-                } else {
-                    Icon(
-                        modifier = Modifier.size(40.dp),
-                        painter = painterResource(MR.images.ic_stop),
-                        tint = Color.Red,
-                        contentDescription = null
-                    )
-                }
-            }
-
-            if (!uiState.value.isListening) {
-                Text(text = stringResource(MR.strings.start_interview),
-                    fontSize = 14.sp)
-            } else {
-                Text(text = stringResource(MR.strings.end_interview),
-                    fontSize = 14.sp)
-            }
-        }
-
-        Column (horizontalAlignment = Alignment.CenterHorizontally) {
-            IconButton(
-                onClick = { viewModel.onShare() }
-            ) {
-                Icon(
-                    modifier = Modifier.size(40.dp),
-                    painter = painterResource(MR.images.ic_share),
-                    tint = colorResource(MR.colors.primaryColor),
-                    contentDescription = null
-                )
-            }
-            Text(text = stringResource(MR.strings.share),
-                fontSize = 14.sp)
-        }
-
-        Column (horizontalAlignment = Alignment.CenterHorizontally){
-            IconButton(
-                onClick = { viewModel.onGptAnswer() }
-            ) {
-                Icon(
-                    modifier = Modifier.size(40.dp),
-                    painter = painterResource(MR.images.ic_gpt),
-                    tint = colorResource(MR.colors.primaryColor),
-                    contentDescription = null
-                )
-            }
-            Text(text = stringResource(MR.strings.gpt_answer),
-                fontSize = 14.sp)
-        }
-
+        ActionIcons(uiState, viewModel)
     }
 }
 
 @Composable
 fun MessageCard(msg: ChatMessage) {
-//    Logger.i { "Compose: ${msg.message}" }
     Card(
         backgroundColor = colorResource(if (msg.user == "AI") MR.colors.primaryColor  else MR.colors.cardColor),
         elevation = 3.dp,
