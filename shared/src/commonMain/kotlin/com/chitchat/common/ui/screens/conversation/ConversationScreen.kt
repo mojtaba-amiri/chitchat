@@ -97,7 +97,6 @@ fun ConversationScreen(modifier: Modifier = Modifier,
                 }
                 ActionsLayoutVertical(uiState, viewModel)
             }
-
         }
     }
 }
@@ -194,7 +193,7 @@ fun ActionIcons(uiState: State<ChatUiState>, viewModel: ConversationViewModel) {
     )
 
     IconTextButton(
-        onClick = { if (uiState.value.messages.isNotEmpty()) viewModel.onGptAnswer() },
+        onClick = { viewModel.onGptAnswer() }, //if (uiState.value.messages.isNotEmpty()) viewModel.onGptAnswer() },
         icon = painterResource(MR.images.ic_gpt),
         text = stringResource(MR.strings.gpt_answer),
         tintColor = if (uiState.value.messages.isNotEmpty())

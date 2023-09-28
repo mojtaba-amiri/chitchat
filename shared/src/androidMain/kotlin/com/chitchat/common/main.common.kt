@@ -13,7 +13,7 @@ actual class PlatformSpecificEvent{
         var startRecognizer: (() -> Unit)? = null
         var stopRecognizer: (() -> Unit)? = null
         var startPurchase: (() -> Unit)? = null
-        var startBillingConnection: (() -> Unit)? = null
+        var hasPremium: (() -> Boolean)? = null
         var shareAsTextFile: ((txt:String, name:String) -> Unit)? = null
     }
 
@@ -29,8 +29,8 @@ actual class PlatformSpecificEvent{
         startPurchase?.invoke()
     }
 
-    actual fun startBillingConnection() {
-        startBillingConnection?.invoke()
+    actual fun hasPremium() : Boolean {
+        return hasPremium?.invoke() ?: false
     }
 
     actual fun shareAsTextFile(txt:String, name:String) {

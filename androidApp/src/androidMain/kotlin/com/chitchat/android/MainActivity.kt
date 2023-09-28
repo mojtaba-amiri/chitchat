@@ -1,7 +1,6 @@
 package com.chitchat.android
 
 import android.Manifest
-import android.R.attr.text
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -12,23 +11,13 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.BillingClient.BillingResponseCode
-import com.android.billingclient.api.BillingClientStateListener
-import com.android.billingclient.api.BillingFlowParams
-import com.android.billingclient.api.BillingResult
-import com.android.billingclient.api.ProductDetailsResult
-import com.android.billingclient.api.Purchase
-import com.android.billingclient.api.PurchasesUpdatedListener
-import com.android.billingclient.api.QueryProductDetailsParams
-import com.android.billingclient.api.queryProductDetails
 import com.chitchat.common.MainView
 import com.chitchat.common.PlatformSpecificEvent
 import com.chitchat.common.errorOnRecognizer
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.qonversion.android.sdk.Qonversion
+import com.qonversion.android.sdk.dto.QonversionError
+import com.qonversion.android.sdk.dto.entitlements.QEntitlement
+import com.qonversion.android.sdk.listeners.QonversionEntitlementsCallback
 import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
@@ -36,33 +25,19 @@ import org.vosk.android.SpeechService
 import org.vosk.android.StorageService
 import java.io.IOException
 
-
-class MainActivity : AppCompatActivity(), RecognitionListener, PurchasesUpdatedListener {
+class MainActivity : AppCompatActivity(), RecognitionListener {
 
     private var model: Model? = null
     private var speechService: SpeechService? = null
     private val viewModel = EventViewModel()
     private var permissionToRecordAccepted = false
 
-    companion object {
-        const val SUBSCRIPTION_NAME = "one_month_subscription"
-    }
-
-    private val billingClient by lazy {
-        BillingClient.newBuilder(applicationContext)
-            .setListener(this)
-            .enablePendingPurchases()
-            .build()
-    }
-
-    private var productDetailsResult : ProductDetailsResult? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         PlatformSpecificEvent.startRecognizer = { startListen() }
         PlatformSpecificEvent.stopRecognizer = { stopListen() }
-        PlatformSpecificEvent.startBillingConnection = { startBillingConnection() }
+        PlatformSpecificEvent.hasPremium = { viewModel.hasPremium }
         PlatformSpecificEvent.startPurchase = { startPurchase() }
         PlatformSpecificEvent.shareAsTextFile =  { txt, name -> shareAsTextFile(txt, name) }
 
@@ -74,13 +49,15 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PurchasesUpdatedL
 
     override fun onResume() {
         super.onResume()
-        startBillingConnection()
         checkPermission()
     }
 
     private fun checkPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf( Manifest.permission.RECORD_AUDIO), 1001)
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                arrayOf( Manifest.permission.RECORD_AUDIO),
+                1001)
         }
     }
 
@@ -96,98 +73,24 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PurchasesUpdatedL
             false
         }
         if (!permissionToRecordAccepted) {
-            Toast.makeText(this, "This app needs audio recording permission. Please grant this permission.", Toast.LENGTH_LONG).show()
-        }
-    }
-
-
-    private fun startBillingConnection() {
-        billingClient.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(billingResult: BillingResult) {
-                if (billingResult.responseCode ==  BillingClient.BillingResponseCode.OK) {
-                    // The BillingClient is ready. You can query purchases here.
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        queryPurchases()
-                    }
-                }
-            }
-            override fun onBillingServiceDisconnected() {
-                // Try to restart the connection on the next request to
-                // Google Play by calling the startConnection() method.
-                viewModel.onEvent(msg = "Disconnected", eType = "Purchase")
-            }
-        })
-    }
-
-    suspend fun queryPurchases() {
-        val productList = ArrayList<QueryProductDetailsParams.Product>()
-        productList.add(
-            QueryProductDetailsParams.Product.newBuilder()
-                .setProductId(SUBSCRIPTION_NAME)
-                .setProductType(BillingClient.ProductType.SUBS)
-                .build()
-        )
-        val params = QueryProductDetailsParams.newBuilder()
-        params.setProductList(productList)
-
-        // leverage queryProductDetails Kotlin extension function
-        productDetailsResult = withContext(Dispatchers.IO) {
-            billingClient.queryProductDetails(params.build())
+            Toast.makeText(this, R.string.permission_error, Toast.LENGTH_LONG).show()
         }
     }
 
     private fun startPurchase() {
-        if (productDetailsResult?.billingResult?.responseCode == BillingResponseCode.ITEM_ALREADY_OWNED) {
-            viewModel.onEvent(msg = "AlreadyOwned", eType = "Purchase")
-            return
-        }
-        productDetailsResult?.productDetailsList?.firstOrNull()?.let { productDetail ->
-            productDetail.subscriptionOfferDetails?.firstOrNull()?.offerToken?.let { token ->
-                val productDetailsParamsList = listOf(
-                    BillingFlowParams.ProductDetailsParams.newBuilder()
-                        // retrieve a value for "productDetails" by calling queryProductDetailsAsync()
-                        .setProductDetails(productDetail)
-                        // to get an offer token, call ProductDetails.subscriptionOfferDetails()
-                        // for a list of offers that are available to the user
-                        .setOfferToken(token)
-                        .build()
-                )
-
-                val billingFlowParams = BillingFlowParams.newBuilder()
-                    .setProductDetailsParamsList(productDetailsParamsList)
-                    .build()
-
-                val billingResult = billingClient.launchBillingFlow(this@MainActivity, billingFlowParams)
-                if (billingResult.responseCode != BillingResponseCode.OK) {
-                    if (billingResult.responseCode != BillingResponseCode.ITEM_ALREADY_OWNED) {
-                        viewModel.onEvent(msg = "AlreadyOwned", eType = "Purchase")
-                    } else {
-                        viewModel.onEvent(msg = "BillingNotLaunched", eType = "Purchase")
-                    }
-                } else {
-                    // Billing is launched. The result will be delivered to "onPurchasesUpdated"
+        Qonversion.shared.purchase(
+            context = this,
+            product = viewModel.offerings.firstOrNull()?.products?.firstOrNull() ?: return,
+            callback = object : QonversionEntitlementsCallback {
+                override fun onError(error: QonversionError) {
+                    viewModel.onEvent("Error", eType = "Purchase")
                 }
-            }
-        } ?: {
-            viewModel.onEvent(msg = "BillingAPINotReady", eType = "Purchase")
-        }
-    }
 
-    override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
-        if (billingResult.responseCode == BillingResponseCode.OK && purchases != null) {
-            for (purchase in purchases) {
-                viewModel.onEvent(msg = "OK", eType = "Purchase")
-            }
-        } else if (billingResult.responseCode == BillingResponseCode.USER_CANCELED) {
-            viewModel.onEvent(msg = "UserCanceled", eType = "Purchase")
-            // Handle an error caused by a user cancelling the purchase flow.
-        } else {
-            viewModel.onEvent(msg = "Error:${billingResult.responseCode}", eType = "Purchase")
-        }
-        if (billingResult.responseCode == BillingResponseCode.ITEM_ALREADY_OWNED) {
-            viewModel.onEvent(msg = "AlreadyOwned", eType = "Purchase")
-            return
-        }
+                override fun onSuccess(entitlements: Map<String, QEntitlement>) {
+                    viewModel.onEvent("Success", eType = "Purchase")
+                    viewModel.updatePermissions()
+                }
+            })
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

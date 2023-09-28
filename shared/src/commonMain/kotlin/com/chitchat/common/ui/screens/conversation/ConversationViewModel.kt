@@ -124,20 +124,24 @@ class ConversationViewModel: ViewModel() {
 
     fun onGptAnswer() {
         // Call backend
-        getPlatformSpecificEvent().startPurchase()
-        this.viewModelScope.launch {
-            isGettingAnswer(true)
-            val response = httpClient.get("https://mocki.io/v1/73ff907f-ffe2-4749-84b3-d1208c992e77") {
-                contentType(ContentType.Application.Json)
+        if (getPlatformSpecificEvent().hasPremium()) {
+            this.viewModelScope.launch {
+                isGettingAnswer(true)
+                val response = httpClient.get("https://mocki.io/v1/73ff907f-ffe2-4749-84b3-d1208c992e77") {
+                    contentType(ContentType.Application.Json)
+                }
+                if (response.status == HttpStatusCode.OK) {
+                    val answer: GptAnswer = response.body()
+                    isGettingAnswer(false)
+                    addMessageList(ChatMessage(message = answer.answer,
+                        user = "AI",
+                        endTime = Clock.System.now().toShortLocalTime()))
+                }
             }
-            if (response.status == HttpStatusCode.OK) {
-                val answer: GptAnswer = response.body()
-                isGettingAnswer(false)
-                addMessageList(ChatMessage(message = answer.answer,
-                    user = "AI",
-                    endTime = Clock.System.now().toShortLocalTime()))
-            }
+        } else {
+            getPlatformSpecificEvent().startPurchase()
         }
+
     }
 
     private fun addMessageList(msg: ChatMessage) {
