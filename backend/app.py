@@ -41,26 +41,30 @@ async def transcribe():
 
 
 @app.route("/api/v1/answer", methods=["POST"])
-@jwt_required()
+# @jwt_required()
 async def answer():
-    user_id = get_jwt_identity() # Get the identity of the current user
-    file = request.files['file'] # the audio file 
-    # r = await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", messages=[{"role": "user", "content": "Answer this: ---"}])
-
+    # user_id = get_jwt_identity() # Get the identity of the current user
+    # file = request.files['file'] # the audio file 
+    text = request.get_json()["text"]
+    r = await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", 
+                                            messages=[
+                                                {"role": "user", "content": f"You are an expert in this field. Answer this question in less than 50 words in the same tone: {text}"}
+                                                ])
     # get teh file from request 
-
-    return jsonify(access_token = user_id), 202
+    return jsonify(response = r["choices"][0]["message"]["content"]), 202
 
 
 @app.route("/api/v1/summarize", methods=["POST"])
-@jwt_required()
+# @jwt_required()
 async def summarize():
-    user_id = get_jwt_identity() # Get the identity of the current user
-    file = request.files['file'] # the audio file 
-    # r = await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", messages=[{"role": "user", "content": "Summarize this: ---"}])
+    # user_id = get_jwt_identity() # Get the identity of the current user
+    text = request.get_json()["text"]
+    r = await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", 
+                                            messages=[
+                                                {"role": "user", "content": f"Summarize this to few bullet points: {text} \m each bullet point one sentence."}
+                                                ])
     # get teh file from request 
-
-    return jsonify(access_token = user_id), 202
+    return jsonify(response = r["choices"][0]["message"]["content"]), 202
 
 if __name__ == '__main__':
     app.run(debug=True)
