@@ -3,12 +3,20 @@ import asyncio
 from flask_jwt_extended import create_access_token, JWTManager, jwt_required, get_jwt_identity
 from auth import register
 from config import config
+from datetime import timedelta
+from werkzeug.utils import secure_filename
+import os 
+import openai
+
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = '/files'
+
 jwt = JWTManager(app) # initialize JWTManager
-app.config['JWT_SECRET_KEY'] = config.JWT.secret
+app.config['JWT_SECRET_KEY'] = config.JWT.get('secret')
 # app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=30) # define the life span of the token
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=30)
+os.makedirs(os.path.join(app.instance_path, 'files'), exist_ok=True)
 
 @app.route("/api/v1/register", methods=["POST"])
 def register():
@@ -19,13 +27,17 @@ def register():
 
 
 @app.route("/api/v1/transcribe", methods=["POST"])
-@jwt_required()
+# @jwt_required()
 async def transcribe():
-    user_id = get_jwt_identity() # Get the identity of the current user
+    # user_id = get_jwt_identity() # Get the identity of the current user
     file = request.files['file']
+    filename = secure_filename(file.filename)
+    file_path = os.path.join(app.instance_path,  f"/files/{filename}")
+    file.save(f'./{file_path}')
+    audio_file = open(f'./{file_path}', "rb")
     # get the file from request 
-    # r = await openai.Audio.atranscribe("whisper-1", file, response_format="verbose_json")
-    return jsonify(access_token = user_id), 202
+    r = await openai.Audio.atranscribe("whisper-1", audio_file, response_format="srt")
+    return jsonify(response = r), 202
 
 
 @app.route("/api/v1/answer", methods=["POST"])
