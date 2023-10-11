@@ -11,6 +11,10 @@ TRANSCRIBE = dict(
     api_key = os.environ['OPENAI_API_KEY']
 )
 
+QONVERSION = dict(
+    api_key = os.environ['QONVERSION_API_KEY']
+)
+
 GPT = dict(
     model = 'gpt-3.5-turbo',
     api_key = os.environ['OPENAI_API_KEY']

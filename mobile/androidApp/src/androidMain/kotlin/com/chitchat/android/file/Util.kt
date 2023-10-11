@@ -2,9 +2,6 @@ package com.chitchat.android.file
 
 import android.content.Context
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.OutputStreamWriter
 
 
 fun Context.write(txt:String, fileName: String) {

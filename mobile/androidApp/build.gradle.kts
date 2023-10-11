@@ -28,8 +28,8 @@ android {
         applicationId = "com.chitchat.ChitChat"
         minSdk = (findProperty("android.minSdk") as String).toInt()
         targetSdk = (findProperty("android.targetSdk") as String).toInt()
-        versionCode = 101
-        versionName = "1.01"
+        versionCode = 103
+        versionName = "1.03"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -43,6 +43,6 @@ dependencies {
     implementation("com.android.billingclient:billing-ktx:6.0.1")
     implementation("com.google.firebase:firebase-crashlytics-buildtools:2.9.9")
     implementation("com.android.billingclient:billing:6.0.1")
-    implementation("com.google.android.gms:play-services-analytics-impl:18.0.3")
+//    implementation("com.google.android.gms:play-services-analytics-impl:18.0.3")
     implementation("io.qonversion.android.sdk:sdk:6.2.0")
 }

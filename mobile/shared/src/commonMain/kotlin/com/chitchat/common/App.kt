@@ -12,6 +12,10 @@ import kotlinx.coroutines.flow.StateFlow
 
 var newEvent: PlatformEvent = PlatformEvent()
 
+const val BASE_URL = "https://mocki.io/v1"
+const val REGISTER_ENDPOINT = "/api/v1/register"
+const val TRANSCRIBE_ENDPOINT = "/api/v1/transcribe"
+
 @Composable
 fun App(newEvent: StateFlow<PlatformEvent>) {
     MaterialTheme {

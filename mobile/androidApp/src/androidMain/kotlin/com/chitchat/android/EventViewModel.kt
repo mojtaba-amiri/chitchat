@@ -23,6 +23,7 @@ class EventViewModel: ViewModel() {
 
     var offerings : MutableList<QOffering> = mutableListOf()
     var hasPremium = false
+    var userId: String? = null
 
     init {
         loadUser()
@@ -76,7 +77,7 @@ class EventViewModel: ViewModel() {
                 if (hasPremium) {
                     _event.tryEmit(
                         PlatformEvent(
-                            message ="hasPremium",
+                            message ="$userId",
                             eType = "PremiumAccess"
                         )
                     )
@@ -88,7 +89,7 @@ class EventViewModel: ViewModel() {
     private fun loadUser() {
         Qonversion.shared.userInfo(object : QonversionUserCallback {
             override fun onSuccess(user: QUser) {
-                user.qonversionId
+                userId = user.qonversionId
                 // use user.qonversionId
             }
 

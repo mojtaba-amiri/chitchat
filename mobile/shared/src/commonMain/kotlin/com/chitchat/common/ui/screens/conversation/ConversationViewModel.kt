@@ -1,5 +1,9 @@
 package com.chitchat.common.ui.screens.conversation
 
+import com.chitchat.common.BASE_URL
+import com.chitchat.common.REGISTER_ENDPOINT
+import com.chitchat.common.TRANSCRIBE_ENDPOINT
+import com.chitchat.common.getPlatformName
 import com.chitchat.common.getPlatformSpecificEvent
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
 import io.ktor.client.HttpClient
@@ -24,7 +28,11 @@ import com.chitchat.common.model.PlatformEvent
 import com.chitchat.common.model.VoskResult
 import com.chitchat.common.model.toShortLocalDateTime
 import com.chitchat.common.model.toShortLocalTime
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.HttpHeaders
 import kotlinx.datetime.Clock
+import kotlinx.serialization.SerialName
 
 
 @Serializable
@@ -35,12 +43,22 @@ data class ChatUiState(
 )
 
 @Serializable
+data class RegisterDto(
+    @SerialName("user_id") val userId: String,
+    val platform: String = getPlatformName()
+)
+
+@Serializable
+data class RegisterResponse(@SerialName("access_token") val accessToken: String)
+
+@Serializable
 data class GptAnswer(
     val answer: String,
     val id: String
 )
 
 class ConversationViewModel: ViewModel() {
+    private var accessToken: String? = null
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState = _uiState.asStateFlow()
     val httpClient: HttpClient = HttpClient(CIO) {
@@ -55,49 +73,69 @@ class ConversationViewModel: ViewModel() {
 
     private fun onNewMessage(msg: PlatformEvent) {
         this.viewModelScope.launch {
-            if (msg.eType == "Recognizer") {
-                when {
-                    msg.message.isNotEmpty() -> {
-                        val newMessage = Json.decodeFromString(VoskResult.serializer(), msg.message)
-                        val current = _uiState.value.messages.toMutableList()
-                        if ((newMessage.partial != null && newMessage.partial.isBlank())) {
-                            // new paragraph
-                            if (current.lastOrNull()?.message?.isNotBlank() == true)
-                                current.add(ChatMessage(message = newMessage.partial,
-                                    endTime = Clock.System.now().toShortLocalTime()))
-                        } else {
-                            // update last text
-                            if (newMessage.text == null) {
-                                newMessage.partial?.let {
-                                    var time = Clock.System.now().toShortLocalTime()
-                                    if (current.isNotEmpty()) {
-                                        time = current.last().time
-                                        current.removeLast()
-                                    }
-                                    current.add(ChatMessage(message = it, time = time,
-                                        endTime = Clock.System.now().toShortLocalTime()))
-                                }
-                            } else {
-                                // Add an empty row to the end
-                                if (current.lastOrNull()?.message?.isNotBlank() == true)
-                                    current.add(ChatMessage(message = "",
-                                        endTime = Clock.System.now().toShortLocalTime()))
-                            }
-                        }
-                        _uiState.update { it.copy(messages = current.toList()) }
-                    }
+            when (msg.eType) {
+                "Recognizer" -> { handleNameTranscribe(msg) }
+                "PremiumAccess" -> { handlePremiumAccess(msg.message) }
+            }
+        }
+    }
 
-                    msg.message.isEmpty() -> { // empty string means new paragraph
-                        val all = _uiState.value.messages.toMutableList()
-                        all.add(ChatMessage(message = "", user = "audience",
+    private fun handleNameTranscribe(msg: PlatformEvent) {
+        when {
+            msg.message.isNotEmpty() -> {
+                val newMessage = Json.decodeFromString(VoskResult.serializer(), msg.message)
+                val current = _uiState.value.messages.toMutableList()
+                if ((newMessage.partial != null && newMessage.partial.isBlank())) {
+                    // new paragraph
+                    if (current.lastOrNull()?.message?.isNotBlank() == true)
+                        current.add(ChatMessage(message = newMessage.partial,
                             endTime = Clock.System.now().toShortLocalTime()))
-                        _uiState.update { it.copy(messages = all.toList()) }
-                    }
-
-                    msg.error != null -> {
-                        // show error
+                } else {
+                    // update last text
+                    if (newMessage.text == null) {
+                        newMessage.partial?.let {
+                            var time = Clock.System.now().toShortLocalTime()
+                            if (current.isNotEmpty()) {
+                                time = current.last().time
+                                current.removeLast()
+                            }
+                            current.add(ChatMessage(message = it, time = time,
+                                endTime = Clock.System.now().toShortLocalTime()))
+                        }
+                    } else {
+                        // Add an empty row to the end
+                        if (current.lastOrNull()?.message?.isNotBlank() == true)
+                            current.add(ChatMessage(message = "",
+                                endTime = Clock.System.now().toShortLocalTime()))
                     }
                 }
+                _uiState.update { it.copy(messages = current.toList()) }
+            }
+
+            msg.message.isEmpty() -> { // empty string means new paragraph
+                val all = _uiState.value.messages.toMutableList()
+                all.add(ChatMessage(message = "", user = "audience",
+                    endTime = Clock.System.now().toShortLocalTime()))
+                _uiState.update { it.copy(messages = all.toList()) }
+            }
+
+            msg.error != null -> {
+                // show error
+            }
+        }
+    }
+
+    private fun handlePremiumAccess(userId: String) {
+        this.viewModelScope.launch {
+            isGettingAnswer(true)
+            val response = httpClient.post("${BASE_URL}${REGISTER_ENDPOINT}") {
+                contentType(ContentType.Application.Json)
+                setBody(RegisterDto(userId))
+            }
+            if (response.status == HttpStatusCode.OK) {
+                val result: RegisterResponse = response.body()
+                this@ConversationViewModel.accessToken = result.accessToken
+                onGptAnswer()
             }
         }
     }
@@ -127,12 +165,13 @@ class ConversationViewModel: ViewModel() {
         if (getPlatformSpecificEvent().hasPremium()) {
             this.viewModelScope.launch {
                 isGettingAnswer(true)
-                val response = httpClient.get("https://mocki.io/v1/73ff907f-ffe2-4749-84b3-d1208c992e77") {
+                val response = httpClient.get("${BASE_URL}${TRANSCRIBE_ENDPOINT}") {
                     contentType(ContentType.Application.Json)
+                    headers.append(HttpHeaders.Authorization, "Bearer $accessToken")
                 }
+                isGettingAnswer(false)
                 if (response.status == HttpStatusCode.OK) {
                     val answer: GptAnswer = response.body()
-                    isGettingAnswer(false)
                     addMessageList(ChatMessage(message = answer.answer,
                         user = "AI",
                         endTime = Clock.System.now().toShortLocalTime()))
@@ -141,7 +180,6 @@ class ConversationViewModel: ViewModel() {
         } else {
             getPlatformSpecificEvent().startPurchase()
         }
-
     }
 
     private fun addMessageList(msg: ChatMessage) {

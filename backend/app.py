@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import asyncio
+import requests
 from flask_jwt_extended import create_access_token, JWTManager, jwt_required, get_jwt_identity
 from auth import register
 from config import config
@@ -15,15 +16,37 @@ app.config['UPLOAD_FOLDER'] = '/files'
 jwt = JWTManager(app) # initialize JWTManager
 app.config['JWT_SECRET_KEY'] = config.JWT.get('secret')
 # app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=30) # define the life span of the token
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=30)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=2)
 os.makedirs(os.path.join(app.instance_path, 'files'), exist_ok=True)
 
 @app.route("/api/v1/register", methods=["POST"])
-def register():
+async def register():
     request = request.get_json() # store the json body request
-    token = request["token"]
-    if not token:
-        return jsonify(code="401", err="You don't have access"), 401
+    user_id = request["user_id"]
+    platform = request["platform"]
+    url = f"https://api.qonversion.io/v3/users/{user_id}/entitlements"
+    qonversion_key = config.QONVERSION.get['api_key']
+    headers = {
+        "accept": "application/json",
+        "Content-Type": "application/json",
+        "Platform": f"{platform}",
+        "Authorization": f"Bearer {qonversion_key}" # Qonversion KEY test_PV77YHL7qnGvsdmpTs7gimsxUvY-Znl2
+    }
+
+    response = requests.get(url, headers=headers)
+    if (response.status_code == 200) :
+        result = response.json()
+        if (result["data"]>0): 
+            product_id = result["data"][0]["product"]["product_id"]
+            if (product_id == None): 
+                return jsonify(code="403", err="Registration not valid."), 403
+            else:
+                # make the jwt 
+                # Add user id 
+                access_token = create_access_token(identity=user_id)
+                return jsonify(access_token=access_token), 200
+    else: 
+         return jsonify(code="501", err="Couldn't process."), 501
 
 
 @app.route("/api/v1/transcribe", methods=["POST"])

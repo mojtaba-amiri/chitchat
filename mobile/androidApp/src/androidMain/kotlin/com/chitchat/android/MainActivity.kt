@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -11,7 +12,8 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ReportFragment.Companion.reportFragment
+import androidx.core.content.FileProvider
+import com.chitchat.android.file.write
 import com.chitchat.common.MainView
 import com.chitchat.common.PlatformSpecificEvent
 import com.chitchat.common.errorOnRecognizer
@@ -19,11 +21,13 @@ import com.qonversion.android.sdk.Qonversion
 import com.qonversion.android.sdk.dto.QonversionError
 import com.qonversion.android.sdk.dto.entitlements.QEntitlement
 import com.qonversion.android.sdk.listeners.QonversionEntitlementsCallback
+import com.qonversion.android.sdk.listeners.QonversionUserCallback
 import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
 import org.vosk.android.StorageService
+import java.io.File
 import java.io.IOException
 
 class MainActivity : AppCompatActivity(), RecognitionListener {
@@ -88,7 +92,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 }
 
                 override fun onSuccess(entitlements: Map<String, QEntitlement>) {
-                    viewModel.onEvent("Success", eType = "Purchase")
                     viewModel.updatePermissions()
                 }
             })
@@ -144,18 +147,24 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private fun shareAsTextFile(txt: String, name: String) {
         try {
             val sharingIntent = Intent(Intent.ACTION_SEND)
-            sharingIntent.type = "text/plain"
-            sharingIntent.putExtra(Intent.EXTRA_TEXT, txt)
-            startActivity(sharingIntent)
-//            val fileName = "${name}.txt"
-//            this.write(txt, fileName)
-//            val file = File(filesDir, fileName)
-//            val fileUri: Uri? =
-//                FileProvider.getUriForFile(
-//                    this@MainActivity,
-//                    "com.chitchat.android.fileprovider",
-//                    file
-//                )
+            sharingIntent.type = "text/*"
+//            sharingIntent.putExtra(Intent.EXTRA_TEXT, txt)
+//            sharingIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + file.getAbsolutePath()));
+//            startActivity(Intent.createChooser(sharingIntent, "share with"))
+            val fileName = "${name}.txt"
+            this.write(txt, fileName)
+            val file = File(filesDir, fileName)
+            if (file.exists()) {
+                val fileUri: Uri? =
+                    FileProvider.getUriForFile(
+                        this@MainActivity,
+                        "com.chitchat.android.fileprovider",
+                        file
+                    )
+                sharingIntent.putExtra(Intent.EXTRA_STREAM, fileUri)
+                sharingIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                startActivity(Intent.createChooser(sharingIntent, "share with"))
+            }
 //            fileUri?.let {
 //                val intent = Intent()
 //                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
