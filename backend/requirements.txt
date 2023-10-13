@@ -4,3 +4,4 @@ openai==0.28.0
 Requests==2.31.0
 Werkzeug==2.2.3
 gunicorn==19.7.1
+Flask[async]==2.0.2
