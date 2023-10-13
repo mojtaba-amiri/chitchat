@@ -1,7 +1,9 @@
 package com.chitchat.common.ui.screens.conversation
 
+import com.chitchat.common.ANSWER_ENDPOINT
 import com.chitchat.common.BASE_URL
 import com.chitchat.common.REGISTER_ENDPOINT
+import com.chitchat.common.SUMMARIZE_ENDPOINT
 import com.chitchat.common.TRANSCRIBE_ENDPOINT
 import com.chitchat.common.getPlatformName
 import com.chitchat.common.getPlatformSpecificEvent
@@ -28,6 +30,7 @@ import com.chitchat.common.model.PlatformEvent
 import com.chitchat.common.model.VoskResult
 import com.chitchat.common.model.toShortLocalDateTime
 import com.chitchat.common.model.toShortLocalTime
+import com.chitchat.common.repository.ChatRepository
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpHeaders
@@ -61,11 +64,7 @@ class ConversationViewModel: ViewModel() {
     private var accessToken: String? = null
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState = _uiState.asStateFlow()
-    val httpClient: HttpClient = HttpClient(CIO) {
-        this.install(ContentNegotiation) {
-            json()
-        }
-    }
+    val repo = ChatRepository()
 
     fun watch(msg: StateFlow<PlatformEvent>) = this.viewModelScope.launch {
             msg.collect { onNewMessage(it) }
@@ -128,10 +127,8 @@ class ConversationViewModel: ViewModel() {
     private fun handlePremiumAccess(userId: String) {
         this.viewModelScope.launch {
             isGettingAnswer(true)
-            val response = httpClient.post("${BASE_URL}${REGISTER_ENDPOINT}") {
-                contentType(ContentType.Application.Json)
-                setBody(RegisterDto(userId))
-            }
+            val response = repo.registerUser(userId)
+            isGettingAnswer(false)
             if (response.status == HttpStatusCode.OK) {
                 val result: RegisterResponse = response.body()
                 this@ConversationViewModel.accessToken = result.accessToken
@@ -157,6 +154,22 @@ class ConversationViewModel: ViewModel() {
     }
 
     fun onSummarize() {
+        // Call backend
+        if (getPlatformSpecificEvent().hasPremium()) {
+            this.viewModelScope.launch {
+                isGettingAnswer(true)
+                val response = repo.summarize()
+                isGettingAnswer(false)
+                if (response.status == HttpStatusCode.OK) {
+                    val answer: GptAnswer = response.body()
+                    addMessageList(ChatMessage(message = answer.answer,
+                        user = "AI",
+                        endTime = Clock.System.now().toShortLocalTime()))
+                }
+            }
+        } else {
+            getPlatformSpecificEvent().startPurchase()
+        }
 
     }
 
@@ -165,10 +178,7 @@ class ConversationViewModel: ViewModel() {
         if (getPlatformSpecificEvent().hasPremium()) {
             this.viewModelScope.launch {
                 isGettingAnswer(true)
-                val response = httpClient.get("${BASE_URL}${TRANSCRIBE_ENDPOINT}") {
-                    contentType(ContentType.Application.Json)
-                    headers.append(HttpHeaders.Authorization, "Bearer $accessToken")
-                }
+                val response = repo.answer(_uiState.value.messages)
                 isGettingAnswer(false)
                 if (response.status == HttpStatusCode.OK) {
                     val answer: GptAnswer = response.body()

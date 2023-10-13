@@ -182,25 +182,27 @@ fun ActionIcons(uiState: State<ChatUiState>, viewModel: ConversationViewModel) {
             Color.Gray
     )
 
-    IconTextButton(
-        onClick = { if (uiState.value.messages.isNotEmpty()) viewModel.onSummarize() },
-        icon = painterResource(MR.images.ic_summarize),
-        text = stringResource(MR.strings.gpt_summarize),
-        tintColor = if (uiState.value.messages.isNotEmpty())
-            colorResource(MR.colors.primaryColor)
-        else
-            Color.Gray
-    )
+    if (uiState.value.messages.isNotEmpty()) {
+        IconTextButton(
+            onClick = { if (uiState.value.messages.isNotEmpty()) viewModel.onSummarize() },
+            icon = painterResource(MR.images.ic_summarize),
+            text = stringResource(MR.strings.gpt_summarize),
+            tintColor = if (uiState.value.messages.isNotEmpty())
+                colorResource(MR.colors.primaryColor)
+            else
+                Color.Gray
+        )
 
-    IconTextButton(
-        onClick = { viewModel.onGptAnswer() }, //if (uiState.value.messages.isNotEmpty()) viewModel.onGptAnswer() },
-        icon = painterResource(MR.images.ic_gpt),
-        text = stringResource(MR.strings.gpt_answer),
-        tintColor = if (uiState.value.messages.isNotEmpty())
-            colorResource(MR.colors.primaryColor)
-        else
-            Color.Gray
-    )
+        IconTextButton(
+            onClick = { viewModel.onGptAnswer() }, //if (uiState.value.messages.isNotEmpty()) viewModel.onGptAnswer() },
+            icon = painterResource(MR.images.ic_gpt),
+            text = stringResource(MR.strings.gpt_answer),
+            tintColor = if (uiState.value.messages.isNotEmpty())
+                colorResource(MR.colors.primaryColor)
+            else
+                Color.Gray
+        )
+    }
 
     IconTextButton(
         onClick = { viewModel.onListenToggle() },

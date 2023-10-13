@@ -1,7 +1,7 @@
 package com.chitchat.common.ui.navigator
 
-import com.chitchat.common.model.EventType
 import com.chitchat.common.model.PlatformEvent
+import com.chitchat.common.settings
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +23,12 @@ class NavigatorViewModel: ViewModel() {
     val currentScreen = _currentScreen.asStateFlow()
     private val screenStack = mutableListOf<Screen>(Screen.Onboard1)
 
+    init {
+        if (isOnboarded()) {
+            _currentScreen.update { Screen.Conversation }
+        }
+    }
+
     fun watch(msg: StateFlow<PlatformEvent>) = this.viewModelScope.launch {
         msg.collect { onNewMessage(it) }
     }
@@ -31,20 +37,13 @@ class NavigatorViewModel: ViewModel() {
         this.viewModelScope.launch {
             if (msg.eType == "UserEvent") {
                 when {
-                    msg.message.startsWith("BackPress") -> {
-                        pop()
-                    }
+                    msg.message.startsWith("BackPress") -> { if (!isOnboarded()) { pop() } }
                 }
             }
         }
-
-        // write code to handle event passed from platform
-        //        this.viewModelScope.launch {
-        //            when {
-        //                event.message.isNotEmpty() -> {}
-        //            }
-        //        }
     }
+
+    private fun isOnboarded(): Boolean = settings.getBoolean("Onboarded", false)
 
     fun navigate(screen: Screen, addToStack: Boolean = true, arg: Map<String, String> = mapOf()) {
         _currentScreen.update { screen }

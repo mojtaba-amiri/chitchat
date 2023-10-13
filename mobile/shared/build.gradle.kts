@@ -87,6 +87,9 @@ kotlin {
                 implementation(Deps.koinCore)
                 implementation(Deps.koinTest)
 
+                // KeyValue Store
+                implementation(Deps.settings)
+
             }
         }
         val androidMain by getting {

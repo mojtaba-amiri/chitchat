@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import com.chitchat.common.model.PlatformEvent
+import com.chitchat.common.settings
 import com.chitchat.common.ui.screens.conversation.ConversationScreen
 import com.chitchat.common.ui.screens.onboard.Onboard1
 import com.chitchat.common.ui.screens.onboard.Onboard2
@@ -27,6 +28,7 @@ fun Navigator(modifier: Modifier = Modifier, navigatorVM: NavigatorViewModel,
             }
 
             is Screen.Conversation -> {
+                settings.putBoolean("Onboarded", true)
                 ConversationScreen(modifier = modifier,
                     platformEvent = platformEvent,
                     navigator = navigatorVM)

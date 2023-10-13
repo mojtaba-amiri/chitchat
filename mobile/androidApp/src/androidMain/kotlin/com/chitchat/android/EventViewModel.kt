@@ -2,7 +2,6 @@ package com.chitchat.android
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.chitchat.common.model.EventType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import com.chitchat.common.model.PlatformEvent
@@ -15,8 +14,10 @@ import com.qonversion.android.sdk.dto.offerings.QOfferings
 import com.qonversion.android.sdk.listeners.QonversionEntitlementsCallback
 import com.qonversion.android.sdk.listeners.QonversionOfferingsCallback
 import com.qonversion.android.sdk.listeners.QonversionUserCallback
+import okhttp3.WebSocket
 
 class EventViewModel: ViewModel() {
+    private var socket: WebSocket? = null
 
     private val _event: MutableStateFlow<PlatformEvent> = MutableStateFlow(PlatformEvent())
     val event = _event.asStateFlow()
@@ -60,6 +61,16 @@ class EventViewModel: ViewModel() {
             }
         })
     }
+
+//    fun socket() {
+//        val httpClient = OkHttpClient()
+//        val request = Request.Builder()
+//            .url("ws://echo.websocket.org")
+//            .build()
+//        val webSocket = httpClient.newWebSocket(request, this)
+//        //webSocket.
+//        httpClient.dispatcher.executorService.shutdown()
+//    }
 
     fun updatePermissions() {
         Qonversion.shared.checkEntitlements(object : QonversionEntitlementsCallback {

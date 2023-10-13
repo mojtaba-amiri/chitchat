@@ -40,6 +40,9 @@ object Deps {
 
     private const val firebaseKotlinVersion = "1.9.0"
     const val firebaseAuth = "dev.gitlive:firebase-auth:$firebaseKotlinVersion"
+
+    private const val settingsVersion = "1.1.0"
+    const val settings = "com.russhwolf:multiplatform-settings-no-arg:$settingsVersion"
 //
     object Android {
         const val minSdk = 24

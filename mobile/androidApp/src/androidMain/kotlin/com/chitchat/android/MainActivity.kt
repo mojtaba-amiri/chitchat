@@ -21,7 +21,6 @@ import com.qonversion.android.sdk.Qonversion
 import com.qonversion.android.sdk.dto.QonversionError
 import com.qonversion.android.sdk.dto.entitlements.QEntitlement
 import com.qonversion.android.sdk.listeners.QonversionEntitlementsCallback
-import com.qonversion.android.sdk.listeners.QonversionUserCallback
 import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
