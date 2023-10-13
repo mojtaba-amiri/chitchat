@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 var newEvent: PlatformEvent = PlatformEvent()
 
-const val BASE_URL = "https://mocki.io/v1"
+const val BASE_URL = "https://transcribe-web-api.onrender.com"
 const val REGISTER_ENDPOINT = "/api/v1/register"
 const val TRANSCRIBE_ENDPOINT = "/api/v1/transcribe"
 const val ANSWER_ENDPOINT = "/api/v1/answer"

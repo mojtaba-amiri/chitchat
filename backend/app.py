@@ -50,7 +50,7 @@ async def register():
 
 
 @app.route("/api/v1/transcribe", methods=["POST"])
-# @jwt_required()
+@jwt_required()
 async def transcribe():
     # user_id = get_jwt_identity() # Get the identity of the current user
     file = request.files['file']
@@ -64,7 +64,7 @@ async def transcribe():
 
 
 @app.route("/api/v1/answer", methods=["POST"])
-# @jwt_required()
+@jwt_required()
 async def answer():
     # user_id = get_jwt_identity() # Get the identity of the current user
     # file = request.files['file'] # the audio file 
@@ -78,7 +78,7 @@ async def answer():
 
 
 @app.route("/api/v1/summarize", methods=["POST"])
-# @jwt_required()
+@jwt_required()
 async def summarize():
     # user_id = get_jwt_identity() # Get the identity of the current user
     text = request.get_json()["text"]
