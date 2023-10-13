@@ -75,7 +75,7 @@ async def answer():
                                                 {"role": "user", "content": f"You are an expert in this field. Answer this question in less than 50 words in the same tone: {text}"}
                                                 ])
     # get teh file from request 
-    return jsonify(response = r["choices"][0]["message"]["content"]), 202
+    return jsonify(response = r), 200
 
 
 @app.route("/api/v1/summarize", methods=["POST"])
@@ -88,7 +88,7 @@ async def summarize():
                                                 {"role": "user", "content": f"Summarize this to few bullet points: {text} \m each bullet point one sentence."}
                                                 ])
     # get teh file from request 
-    return jsonify(response = r["choices"][0]["message"]["content"]), 202
+    return jsonify(response = r), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
