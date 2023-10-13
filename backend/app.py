@@ -26,7 +26,7 @@ async def register():
     platform = req["platform"]
     print(f"request --- user_Id:{user_id}, platform:{platform}")
     url = f"https://api.qonversion.io/v3/users/{user_id}/entitlements"
-    qonversion_key = config.QONVERSION.get['api_key']
+    qonversion_key = config.QONVERSION.get('api_key')
     headers = {
         "accept": "application/json",
         "Content-Type": "application/json",
