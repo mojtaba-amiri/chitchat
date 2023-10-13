@@ -19,6 +19,7 @@ import com.chitchat.common.PlatformSpecificEvent
 import com.chitchat.common.errorOnRecognizer
 import com.qonversion.android.sdk.Qonversion
 import com.qonversion.android.sdk.dto.QonversionError
+import com.qonversion.android.sdk.dto.QonversionErrorCode
 import com.qonversion.android.sdk.dto.entitlements.QEntitlement
 import com.qonversion.android.sdk.listeners.QonversionEntitlementsCallback
 import org.vosk.Model
@@ -87,7 +88,11 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             product = viewModel.offerings.firstOrNull()?.products?.firstOrNull() ?: return,
             callback = object : QonversionEntitlementsCallback {
                 override fun onError(error: QonversionError) {
-                    viewModel.onEvent("Error", eType = "Purchase")
+                    if (error.code == QonversionErrorCode.ProductAlreadyOwned) {
+                        viewModel.confirmPermission(true)
+                    } else {
+                        viewModel.onEvent("Error", eType = "Purchase")
+                    }
                 }
 
                 override fun onSuccess(entitlements: Map<String, QEntitlement>) {

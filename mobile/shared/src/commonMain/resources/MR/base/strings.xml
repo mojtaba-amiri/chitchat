@@ -14,4 +14,6 @@
     <string name="description">Easily transcribe a Chat, Interview, or meeting. Then share it! </string>
     <string name="description_chatgpt">If you were not sure what to say at any point, Use ChatGpt to give you an answer </string>
     <string name="instructions">Keep the phone near the source of audio and hit start. </string>
+    <string name="conversation_is_empty">No question to answer! Keep the phone near the source of audio. </string>
+    <string name="conversation_is_empty_summarize">Nothing to summarize! Keep the phone near the source of audio. </string>
 </resources>

@@ -54,6 +54,7 @@ kotlin {
                 implementation(Deps.ktorContentCIO)
                 implementation(Deps.ktorContentNegitiation)
                 implementation(Deps.ktorSerialization)
+                implementation(Deps.ktorLogging)
 
                 // Serializations
                 implementation(Deps.kotlinSerialization)

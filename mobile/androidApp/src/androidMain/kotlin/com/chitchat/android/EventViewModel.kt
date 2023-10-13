@@ -35,7 +35,7 @@ class EventViewModel: ViewModel() {
     fun onEvent(msg: String = "", e: Exception? = null,
                 eType: String = "Recognizer",
                 timeOut: Boolean = false) {
-        Log.e("EVENT", "EVENT: $eType   $msg")
+//        Log.e("EVENT", "EVENT: $eType   $msg")
         _event.tryEmit(PlatformEvent(msg, e, eType = eType, timeOut))
     }
 
@@ -78,29 +78,40 @@ class EventViewModel: ViewModel() {
                 _event.tryEmit(
                     PlatformEvent(
                         message ="error",
+                        error = Exception("Not Premium"),
                         eType = "PremiumAccess"
                     )
                 )
             }
 
             override fun onSuccess(entitlements: Map<String, QEntitlement>) {
-                hasPremium = entitlements["Premium"]?.isActive == true
-                if (hasPremium) {
-                    _event.tryEmit(
-                        PlatformEvent(
-                            message ="$userId",
-                            eType = "PremiumAccess"
-                        )
-                    )
-                }
+                confirmPermission(entitlements["Premium"]?.isActive == true)
             }
         })
+    }
+
+    fun confirmPermission(value: Boolean) {
+        hasPremium = value
+        if (hasPremium) {
+            _event.tryEmit(
+                PlatformEvent(
+                    message ="$userId",
+                    eType = "PremiumAccess"
+                )
+            )
+        }
     }
 
     private fun loadUser() {
         Qonversion.shared.userInfo(object : QonversionUserCallback {
             override fun onSuccess(user: QUser) {
                 userId = user.qonversionId
+                _event.tryEmit(
+                    PlatformEvent(
+                        message ="$userId",
+                        eType = "UserId"
+                    )
+                )
                 // use user.qonversionId
             }
 

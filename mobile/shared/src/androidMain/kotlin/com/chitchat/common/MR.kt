@@ -27,6 +27,8 @@ public actual object MR {
         public actual val description: StringResource = StringResource(R.string.description)
         public actual val description_chatgpt: StringResource = StringResource(R.string.description_chatgpt)
         public actual val instructions: StringResource = StringResource(R.string.instructions)
+        public actual val conversation_is_empty: StringResource = StringResource(R.string.conversation_is_empty)
+        public actual val conversation_is_empty_summarize: StringResource = StringResource(R.string.conversation_is_empty_summarize)
     }
 
     public actual object plurals : ResourceContainer<PluralsResource>

@@ -28,9 +28,6 @@ fun App(newEvent: StateFlow<PlatformEvent>) {
         Navigator(modifier = Modifier,
             navigatorVM = navigatorViewModel,
             platformEvent = newEvent)
-//        val viewModel = getViewModel("Chat", viewModelFactory { ChatViewModel() })
-//        viewModel.watch(newEvent)
-//        MainPage(Modifier, viewModel)
     }
 }
 

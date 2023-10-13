@@ -7,6 +7,7 @@ object Deps {
     const val ktorContentCIO = "io.ktor:ktor-client-cio:$ktorVersion"
     const val ktorContentNegitiation = "io.ktor:ktor-client-content-negotiation:$ktorVersion"
     const val ktorSerialization = "io.ktor:ktor-serialization-kotlinx-json:$ktorVersion"
+    const val ktorLogging = "io.ktor:ktor-client-logging:1.3.1"
 
     const val kotlinxJson = "io.ktor:ktor-serialization-kotlinx-json:$ktorVersion"
 

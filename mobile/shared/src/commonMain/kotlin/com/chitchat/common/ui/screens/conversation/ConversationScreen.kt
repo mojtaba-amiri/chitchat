@@ -19,10 +19,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.ExtendedFloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarDuration
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -47,8 +53,11 @@ import com.chitchat.common.ui.navigator.Screen
 import dev.icerock.moko.mvvm.compose.getViewModel
 import dev.icerock.moko.mvvm.compose.viewModelFactory
 import dev.icerock.moko.resources.compose.colorResource
+import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
+import dev.icerock.moko.resources.desc.Resource
+import dev.icerock.moko.resources.desc.StringDesc
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -59,43 +68,53 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 fun ConversationScreen(modifier: Modifier = Modifier,
                        platformEvent: StateFlow<PlatformEvent>,
                        navigator: NavigatorViewModel) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
     val viewModel = getViewModel("Conversation", viewModelFactory { ConversationViewModel() })
     val uiState = viewModel.uiState.collectAsState()
     viewModel.watch(platformEvent)
     val mode = remember { mutableStateOf("Portrait") }
-    BoxWithConstraints {
-        mode.value = if (maxWidth < maxHeight) "Portrait" else "Landscape"
-        if (mode.value == "Portrait") {
-            Column(
-                modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .background(color = Color.White),
-                verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.Start
-            ) {
-                if (uiState.value.messages.isNotEmpty()) {
-                    ConversationList(uiState)
-                } else {
-                    EmptyConversation(viewModel, navigator)
-                }
-                ActionsLayoutHorizontal(uiState, viewModel)
-            }
-        } else {
-            Row(modifier
-                .fillMaxWidth()
-                .fillMaxHeight()) {
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        }
+    ) {
+        BoxWithConstraints {
+            mode.value = if (maxWidth < maxHeight) "Portrait" else "Landscape"
+            if (mode.value == "Portrait") {
                 Column(
-                    Modifier
+                    modifier
+                        .fillMaxWidth()
                         .fillMaxHeight()
-                        .weight(1f)
                         .background(color = Color.White),
                     verticalArrangement = Arrangement.Bottom,
                     horizontalAlignment = Alignment.Start
                 ) {
-                    ConversationList(uiState)
+                    if (uiState.value.messages.isNotEmpty()) {
+                        ConversationList(uiState)
+                    } else {
+                        EmptyConversation(viewModel, navigator)
+                    }
+                    ActionsLayoutHorizontal(uiState, viewModel, snackbarHostState)
                 }
-                ActionsLayoutVertical(uiState, viewModel)
+            } else {
+                Row(
+                    modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                ) {
+                    Column(
+                        Modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                            .background(color = Color.White),
+                        verticalArrangement = Arrangement.Bottom,
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        ConversationList(uiState)
+                    }
+                    ActionsLayoutVertical(uiState, viewModel, snackbarHostState)
+                }
             }
         }
     }
@@ -156,7 +175,9 @@ fun ColumnScope.EmptyConversation(
 
 
 @Composable
-fun ActionsLayoutVertical(uiState: State<ChatUiState>, viewModel: ConversationViewModel) {
+fun ActionsLayoutVertical(uiState: State<ChatUiState>,
+                          viewModel: ConversationViewModel,
+                          snackbarHostState: SnackbarHostState) {
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -165,12 +186,15 @@ fun ActionsLayoutVertical(uiState: State<ChatUiState>, viewModel: ConversationVi
         verticalArrangement = Arrangement.SpaceAround,
         horizontalAlignment = Alignment.CenterHorizontally) {
 
-        ActionIcons(uiState, viewModel)
+        ActionIcons(uiState, viewModel, snackbarHostState)
     }
 }
 
 @Composable
-fun ActionIcons(uiState: State<ChatUiState>, viewModel: ConversationViewModel) {
+fun ActionIcons(uiState: State<ChatUiState>,
+                viewModel: ConversationViewModel,
+                snackbarHostState: SnackbarHostState) {
+    val scope = rememberCoroutineScope()
 
     IconTextButton(
         onClick = { if (uiState.value.messages.isNotEmpty()) viewModel.onShare() },
@@ -182,27 +206,53 @@ fun ActionIcons(uiState: State<ChatUiState>, viewModel: ConversationViewModel) {
             Color.Gray
     )
 
-    if (uiState.value.messages.isNotEmpty()) {
-        IconTextButton(
-            onClick = { if (uiState.value.messages.isNotEmpty()) viewModel.onSummarize() },
-            icon = painterResource(MR.images.ic_summarize),
-            text = stringResource(MR.strings.gpt_summarize),
-            tintColor = if (uiState.value.messages.isNotEmpty())
-                colorResource(MR.colors.primaryColor)
-            else
-                Color.Gray
-        )
 
-        IconTextButton(
-            onClick = { viewModel.onGptAnswer() }, //if (uiState.value.messages.isNotEmpty()) viewModel.onGptAnswer() },
-            icon = painterResource(MR.images.ic_gpt),
-            text = stringResource(MR.strings.gpt_answer),
-            tintColor = if (uiState.value.messages.isNotEmpty())
-                colorResource(MR.colors.primaryColor)
-            else
-                Color.Gray
-        )
-    }
+    val msgSummarize = stringResource(MR.strings.conversation_is_empty_summarize)
+    IconTextButton(
+        onClick = {
+            if (uiState.value.messages.isNotEmpty()) {
+                viewModel.onSummarize()
+            } else {
+                scope.launch {
+                    snackbarHostState
+                        .showSnackbar(
+                            message = msgSummarize,
+                            duration = SnackbarDuration.Short
+                        )
+                }
+            }
+        },
+        icon = painterResource(MR.images.ic_summarize),
+        text = stringResource(MR.strings.gpt_summarize),
+        tintColor = if (uiState.value.messages.isNotEmpty())
+            colorResource(MR.colors.primaryColor)
+        else
+            Color.Gray
+    )
+
+    val msgAnswer = stringResource(MR.strings.conversation_is_empty)
+
+    IconTextButton(
+        onClick = {
+            if (uiState.value.messages.isNotEmpty()) {
+                viewModel.onGptAnswer()
+            } else {
+                scope.launch {
+                    snackbarHostState
+                        .showSnackbar(
+                            message = msgAnswer,
+                            duration = SnackbarDuration.Short
+                        )
+                }
+            }
+                  }, //if (uiState.value.messages.isNotEmpty()) viewModel.onGptAnswer() },
+        icon = painterResource(MR.images.ic_gpt),
+        text = stringResource(MR.strings.gpt_answer),
+        tintColor = if (uiState.value.messages.isNotEmpty())
+            colorResource(MR.colors.primaryColor)
+        else
+            Color.Gray
+    )
 
     IconTextButton(
         onClick = { viewModel.onListenToggle() },
@@ -252,13 +302,15 @@ fun IconTextButton(
 }
 
 @Composable
-fun ActionsLayoutHorizontal(uiState: State<ChatUiState>, viewModel: ConversationViewModel) {
+fun ActionsLayoutHorizontal(uiState: State<ChatUiState>,
+                            viewModel: ConversationViewModel,
+                            snackbarHostState: SnackbarHostState) {
     Row(
         modifier= Modifier
             .padding(10.dp)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceAround) {
-        ActionIcons(uiState, viewModel)
+        ActionIcons(uiState, viewModel, snackbarHostState)
     }
 }
 

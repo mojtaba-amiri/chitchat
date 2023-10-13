@@ -1,22 +1,10 @@
 package com.chitchat.common.ui.screens.conversation
 
-import com.chitchat.common.ANSWER_ENDPOINT
-import com.chitchat.common.BASE_URL
-import com.chitchat.common.REGISTER_ENDPOINT
-import com.chitchat.common.SUMMARIZE_ENDPOINT
-import com.chitchat.common.TRANSCRIBE_ENDPOINT
 import com.chitchat.common.getPlatformName
 import com.chitchat.common.getPlatformSpecificEvent
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.get
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,15 +13,11 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import com.chitchat.common.model.ChatMessage
-import com.chitchat.common.model.EventType
 import com.chitchat.common.model.PlatformEvent
 import com.chitchat.common.model.VoskResult
-import com.chitchat.common.model.toShortLocalDateTime
 import com.chitchat.common.model.toShortLocalTime
 import com.chitchat.common.repository.ChatRepository
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.http.HttpHeaders
+import com.chitchat.common.settings
 import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
 
@@ -47,8 +31,10 @@ data class ChatUiState(
 
 @Serializable
 data class RegisterDto(
-    @SerialName("user_id") val userId: String,
-    val platform: String = getPlatformName()
+    @SerialName("user_id")
+    val userId: String,
+    @SerialName("platform")
+    val platform: String = "Android"
 )
 
 @Serializable
@@ -56,15 +42,55 @@ data class RegisterResponse(@SerialName("access_token") val accessToken: String)
 
 @Serializable
 data class GptAnswer(
-    val answer: String,
-    val id: String
+    val response: GptResponse
 )
 
+@Serializable
+data class GptResponse(
+    val choices: List<Choice>,
+    val model: String
+)
+
+@Serializable
+data class Choice(
+    val message: GptMessage
+)
+
+@Serializable
+data class GptMessage(
+    val role: String,
+    val content: String
+)
+
+/**
+ * {
+ *     "id": "chatcmpl-abc123",
+ *     "object": "chat.completion",
+ *     "created": 1677858242,
+ *     "model": "gpt-3.5-turbo-0613",
+ *     "usage": {
+ *         "prompt_tokens": 13,
+ *         "completion_tokens": 7,
+ *         "total_tokens": 20
+ *     },
+ *     "choices": [
+ *         {
+ *             "message": {
+ *                 "role": "assistant",
+ *                 "content": "\n\nThis is a test!"
+ *             },
+ *             "finish_reason": "stop",
+ *             "index": 0
+ *         }
+ *     ]
+ * }
+ * */
+
 class ConversationViewModel: ViewModel() {
-    private var accessToken: String? = null
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState = _uiState.asStateFlow()
-    val repo = ChatRepository()
+    private val repo = ChatRepository()
+    private var userId = settings.getString("UserId", "")
 
     fun watch(msg: StateFlow<PlatformEvent>) = this.viewModelScope.launch {
             msg.collect { onNewMessage(it) }
@@ -72,11 +98,27 @@ class ConversationViewModel: ViewModel() {
 
     private fun onNewMessage(msg: PlatformEvent) {
         this.viewModelScope.launch {
+            if (msg.error != null) {
+                handleErrorMessage(msg)
+                return@launch
+            }
             when (msg.eType) {
-                "Recognizer" -> { handleNameTranscribe(msg) }
-                "PremiumAccess" -> { handlePremiumAccess(msg.message) }
+                "Recognizer" -> {
+                    handleNameTranscribe(msg)
+                }
+                "PremiumAccess" -> {
+                    setUser(msg.message)
+                    refreshToken(msg.message)
+                }
+                "UserId" -> {
+                    setUser(msg.message)
+                }
             }
         }
+    }
+
+    private fun handleErrorMessage(msg: PlatformEvent) {
+
     }
 
     private fun handleNameTranscribe(msg: PlatformEvent) {
@@ -124,17 +166,28 @@ class ConversationViewModel: ViewModel() {
         }
     }
 
-    private fun handlePremiumAccess(userId: String) {
+    private fun refreshToken(userId: String) {
         this.viewModelScope.launch {
             isGettingAnswer(true)
-            val response = repo.registerUser(userId)
+            val response = repo.refreshToken(userId)
             isGettingAnswer(false)
             if (response.status == HttpStatusCode.OK) {
                 val result: RegisterResponse = response.body()
-                this@ConversationViewModel.accessToken = result.accessToken
-                onGptAnswer()
+                repo.setAuthToken(result.accessToken)
+            } else {
+                if (getPlatformSpecificEvent().hasPremium()) {
+                    // User is premium but getting token failed
+                } else {
+                    // Register failed because user is not Premium
+                }
+                // Register failed no token
             }
         }
+    }
+
+    private fun setUser(userId: String) {
+        settings.putString("UserId", userId)
+        this.userId = userId
     }
 
     fun onListenToggle() {
@@ -162,7 +215,8 @@ class ConversationViewModel: ViewModel() {
                 isGettingAnswer(false)
                 if (response.status == HttpStatusCode.OK) {
                     val answer: GptAnswer = response.body()
-                    addMessageList(ChatMessage(message = answer.answer,
+                    addMessageList(ChatMessage(message =
+                    answer.response.choices.map { it.message.content }.joinToString ("\n"),
                         user = "AI",
                         endTime = Clock.System.now().toShortLocalTime()))
                 }
@@ -179,10 +233,17 @@ class ConversationViewModel: ViewModel() {
             this.viewModelScope.launch {
                 isGettingAnswer(true)
                 val response = repo.answer(_uiState.value.messages)
+                if (response == null) {
+                    getPlatformSpecificEvent().startPurchase()
+                    return@launch
+                }
                 isGettingAnswer(false)
                 if (response.status == HttpStatusCode.OK) {
-                    val answer: GptAnswer = response.body()
-                    addMessageList(ChatMessage(message = answer.answer,
+                    val result: GptAnswer = response.body()
+                    addMessageList(
+                        ChatMessage(message = result
+                            .response
+                            .choices.map { it.message.content }.joinToString ("\n" ),
                         user = "AI",
                         endTime = Clock.System.now().toShortLocalTime()))
                 }
