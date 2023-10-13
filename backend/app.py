@@ -37,7 +37,7 @@ async def register():
     response = requests.get(url, headers=headers)
     if (response.status_code == 200) :
         result = response.json()
-        if (result["data"]>0): 
+        if (len(result["data"])>0): 
             product_id = result["data"][0]["product"]["product_id"]
             if (product_id == None): 
                 return jsonify(code="403", err="Registration not valid."), 403
@@ -47,7 +47,7 @@ async def register():
                 access_token = create_access_token(identity=user_id)
                 return jsonify(access_token=access_token), 200
     else: 
-         return jsonify(code="501", err="Couldn't process."), 501
+         return jsonify(code="501", err="Couldn't register!"), 501
 
 
 @app.route("/api/v1/transcribe", methods=["POST"])
