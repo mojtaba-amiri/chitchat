@@ -72,7 +72,7 @@ async def answer():
     text = request.get_json()["text"]
     r = await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", 
                                             messages=[
-                                                {"role": "user", "content": f"You are an expert in this field. Answer this question in less than 50 words in the same tone: {text}"}
+                                                {"role": "user", "content": f"You are an expert in this field. Answer this question in less than 250 words in the same tone: {text}"}
                                                 ])
     # get teh file from request 
     return jsonify(response = r), 200
