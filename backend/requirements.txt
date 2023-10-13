@@ -5,3 +5,4 @@ Requests==2.31.0
 Werkzeug==2.2.3
 gunicorn==19.7.1
 Flask[async]==2.0.2
+asgiref==3.7.2
