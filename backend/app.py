@@ -21,9 +21,10 @@ os.makedirs(os.path.join(app.instance_path, 'files'), exist_ok=True)
 
 @app.route("/api/v1/register", methods=["POST"])
 async def register():
-    request = request.get_json() # store the json body request
-    user_id = request["user_id"]
-    platform = request["platform"]
+    req = request.get_json() # store the json body request
+    user_id = req["user_id"]
+    platform = req["platform"]
+    print(f"request --- user_Id:{user_id}, platform:{platform}")
     url = f"https://api.qonversion.io/v3/users/{user_id}/entitlements"
     qonversion_key = config.QONVERSION.get['api_key']
     headers = {
