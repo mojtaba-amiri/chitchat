@@ -2,12 +2,14 @@
 object Deps {
     const val kamel = "media.kamel:kamel-image:0.7.1"
 
-    const val ktorVersion = "2.3.3"
+    const val napier = "io.github.aakira:napier:2.6.1"
+
+    const val ktorVersion = "2.3.5"
     const val ktorCore = "io.ktor:ktor-client-core:$ktorVersion"
     const val ktorContentCIO = "io.ktor:ktor-client-cio:$ktorVersion"
     const val ktorContentNegitiation = "io.ktor:ktor-client-content-negotiation:$ktorVersion"
     const val ktorSerialization = "io.ktor:ktor-serialization-kotlinx-json:$ktorVersion"
-    const val ktorLogging = "io.ktor:ktor-client-logging:1.3.1"
+    const val ktorLogging = "io.ktor:ktor-client-logging:$ktorVersion"
 
     const val kotlinxJson = "io.ktor:ktor-serialization-kotlinx-json:$ktorVersion"
 
@@ -26,9 +28,6 @@ object Deps {
     private const val mokoResourcesVersion = "0.23.0"
     const val mokoResources = "dev.icerock.moko:resources:$mokoResourcesVersion"
     const val mokoResourcesCompose = "dev.icerock.moko:resources-compose:$mokoResourcesVersion"
-
-    private const val kermitVersion = "2.0.0-RC5"
-    const val kermit = "co.touchlab:kermit:$kermitVersion"
 
     private const val voyagerVersion = "1.0.0-rc05"
     const val voyager = "cafe.adriel.voyager:voyager-navigator:$voyagerVersion"

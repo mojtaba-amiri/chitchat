@@ -4,15 +4,17 @@ import com.chitchat.common.ANSWER_ENDPOINT
 import com.chitchat.common.BASE_URL
 import com.chitchat.common.REGISTER_ENDPOINT
 import com.chitchat.common.SUMMARIZE_ENDPOINT
-import com.chitchat.common.getPlatformName
 import com.chitchat.common.model.ChatMessage
 import com.chitchat.common.settings
 import com.chitchat.common.ui.screens.conversation.RegisterDto
+import io.github.aakira.napier.Napier
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.timeout
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -22,7 +24,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 
 @Serializable
 data class AnswerRequestDto(
@@ -31,13 +32,20 @@ data class AnswerRequestDto(
 class ChatRepository {
     private var token : String = settings.getString("Token", "")
     val httpClient: HttpClient = HttpClient(CIO) {
+        install(Logging) {
+            level = LogLevel.ALL
+            logger = object : Logger {
+                override fun log(message: String) {
+                    Napier.v(tag = "HTTP Client", message = message)
+                }
+            }
+        }
         this.install(ContentNegotiation) {
             json()
         }
         install(HttpTimeout) {
             connectTimeoutMillis = 60000
             requestTimeoutMillis = 60000
-            timeou
         }
     }
 

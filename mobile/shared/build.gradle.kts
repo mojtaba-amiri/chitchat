@@ -75,7 +75,7 @@ kotlin {
                 api(Deps.mokoMvvmComposeFlow)
 
                 // Logging
-                implementation(Deps.kermit)
+                implementation(Deps.napier)
 
                 // Navigation
                 implementation(Deps.voyager)
