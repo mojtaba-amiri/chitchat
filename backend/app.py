@@ -30,7 +30,7 @@ async def register():
         req = request.get_json() # store the json body request
         print(f"request --- {req}")
         user_id = req["user_id"]
-        platform = req["platform"]
+        platform = req["req_platform"]
         url = f"https://api.qonversion.io/v3/users/{user_id}/entitlements"
         qonversion_key = config.QONVERSION.get('api_key')
         headers = {
@@ -81,6 +81,7 @@ async def answer():
     r = await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", 
                                             messages=[{"role": "user", "content": f"{answer_prompt} {text}"}])
         # return jsonify(error="Something Went wrong!"), 500
+        
     return jsonify(response = r), 200
 
 
