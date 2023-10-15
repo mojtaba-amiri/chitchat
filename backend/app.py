@@ -76,14 +76,13 @@ async def transcribe():
 async def answer():
     # user_id = get_jwt_identity() # Get the identity of the current user
     # file = request.files['file'] # the audio file 
-    try:
-        text = request.get_json()["text"]
-        r = await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", 
-                                                messages=[{"role": "user", "content": f"{answer_prompt} {text}"}])
-        # get teh file from request 
-        return jsonify(response = r), 200
-    except:
-        return jsonify(error="Something Went wrong!"), 500
+
+    text = request.get_json()["text"]
+    r = await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", 
+                                            messages=[{"role": "user", "content": f"{answer_prompt} {text}"}])
+        # return jsonify(error="Something Went wrong!"), 500
+    return jsonify(response = r), 200
+
 
 
 @app.route("/api/v1/summarize", methods=["POST"])
