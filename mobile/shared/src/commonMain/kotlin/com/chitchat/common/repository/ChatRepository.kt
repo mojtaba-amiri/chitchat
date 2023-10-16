@@ -24,6 +24,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 @Serializable
 data class AnswerRequestDto(
@@ -36,12 +37,14 @@ class ChatRepository {
             level = LogLevel.ALL
             logger = object : Logger {
                 override fun log(message: String) {
-                    Napier.v(tag = "HTTP Client", message = message)
+                    Napier.e(tag = "HTTP Client", message = message)
                 }
             }
         }
         this.install(ContentNegotiation) {
-            json()
+            json(Json {
+                ignoreUnknownKeys = true
+            })
         }
         install(HttpTimeout) {
             connectTimeoutMillis = 60000
@@ -55,26 +58,40 @@ class ChatRepository {
     }
 
     suspend fun refreshToken(userId: String): HttpResponse {
-        return httpClient.post("$BASE_URL$REGISTER_ENDPOINT") {
+        try {
+            val request = RegisterDto(userId,  reqPlatform = "Android")
+            return httpClient.post("$BASE_URL$REGISTER_ENDPOINT") {
                 contentType(ContentType.Application.Json)
-                setBody(RegisterDto(userId, "Android"))
+                setBody(request)
             }
+        } catch (e: Exception) {
+            throw e
+        }
     }
 
     suspend fun summarize(): HttpResponse {
+        try {
          return httpClient.get("${BASE_URL}$SUMMARIZE_ENDPOINT") {
             contentType(ContentType.Application.Json)
             headers.append(HttpHeaders.Authorization, "Bearer $token")
+        }
+        } catch (e: Exception) {
+            throw e
         }
     }
 
     suspend fun answer(messages: List<ChatMessage>): HttpResponse? {
         if (token.isEmpty()) return null
         token.let {
-            return httpClient.post("${BASE_URL}$ANSWER_ENDPOINT") {
-                headers.append(HttpHeaders.Authorization, "Bearer $token")
-                contentType(ContentType.Application.Json)
-                setBody(AnswerRequestDto(messages.map { it.message }.joinToString ( "\n" )))
+            try {
+                return httpClient.post("${BASE_URL}$ANSWER_ENDPOINT") {
+                    headers.append(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(AnswerRequestDto(messages.map { it.message }.joinToString("\n")))
+                }
+            } catch (e: Exception) {
+                Napier.e(message = e.message.toString())
+                throw e
             }
         }
     }

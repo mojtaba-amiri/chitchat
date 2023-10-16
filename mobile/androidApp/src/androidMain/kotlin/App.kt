@@ -7,6 +7,8 @@ import com.qonversion.android.sdk.Qonversion
 import com.qonversion.android.sdk.QonversionConfig
 import com.qonversion.android.sdk.dto.QEnvironment
 import com.qonversion.android.sdk.dto.QLaunchMode
+import io.github.aakira.napier.DebugAntilog
+import io.github.aakira.napier.Napier
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -29,6 +31,10 @@ class App: Application() {
             .build()
         Qonversion.initialize(qonversionConfig)
 
+        if (BuildConfig.DEBUG) {
+            // init napier
+            Napier.base(DebugAntilog())
+        }
 
         startKoin {
             androidContext(this@App)

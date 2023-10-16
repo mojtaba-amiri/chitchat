@@ -4,7 +4,7 @@ object Deps {
 
     const val napier = "io.github.aakira:napier:2.6.1"
 
-    const val ktorVersion = "2.3.5"
+    const val ktorVersion = "2.3.4"
     const val ktorCore = "io.ktor:ktor-client-core:$ktorVersion"
     const val ktorContentCIO = "io.ktor:ktor-client-cio:$ktorVersion"
     const val ktorContentNegitiation = "io.ktor:ktor-client-content-negotiation:$ktorVersion"

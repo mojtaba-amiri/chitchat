@@ -32,7 +32,16 @@ fun Instant.toShortLocalTime() = this
     .toLocalDateTime(TimeZone.currentSystemDefault())
     .time.shortTime()
 
+
+
 fun Instant.toShortLocalDateTime(removeQuotes: Boolean = false) = this
     .toLocalDateTime(TimeZone.currentSystemDefault()).toString().apply {
         if (removeQuotes) this.replace(":", "")
     }
+
+fun Instant.asFileName(): String {
+    val raw = this.toLocalDateTime(TimeZone.currentSystemDefault()).toString()
+    return raw.replace("-","_")
+        .replace(":", "")
+        .split(".")[0]
+}

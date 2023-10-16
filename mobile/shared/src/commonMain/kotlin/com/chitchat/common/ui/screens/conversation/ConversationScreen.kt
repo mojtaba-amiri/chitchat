@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExtendedFloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -69,7 +70,7 @@ fun ConversationScreen(modifier: Modifier = Modifier,
                        platformEvent: StateFlow<PlatformEvent>,
                        navigator: NavigatorViewModel) {
     val snackbarHostState = remember { SnackbarHostState() }
-
+    val scope = rememberCoroutineScope()
     val viewModel = getViewModel("Conversation", viewModelFactory { ConversationViewModel() })
     val uiState = viewModel.uiState.collectAsState()
     viewModel.watch(platformEvent)
@@ -81,6 +82,17 @@ fun ConversationScreen(modifier: Modifier = Modifier,
     ) {
         BoxWithConstraints {
             mode.value = if (maxWidth < maxHeight) "Portrait" else "Landscape"
+            uiState.value.displayMessage?.let {
+                scope.launch {
+                    snackbarHostState
+                        .showSnackbar(
+                            message = it,
+                            duration = SnackbarDuration.Short
+                        )
+                    viewModel.messageShown()
+                }
+            }
+
             if (mode.value == "Portrait") {
                 Column(
                     modifier
@@ -227,7 +239,8 @@ fun ActionIcons(uiState: State<ChatUiState>,
         tintColor = if (uiState.value.messages.isNotEmpty())
             colorResource(MR.colors.primaryColor)
         else
-            Color.Gray
+            Color.Gray,
+        isLoading = uiState.value.isGettingSummary
     )
 
     val msgAnswer = stringResource(MR.strings.conversation_is_empty)
@@ -251,7 +264,8 @@ fun ActionIcons(uiState: State<ChatUiState>,
         tintColor = if (uiState.value.messages.isNotEmpty())
             colorResource(MR.colors.primaryColor)
         else
-            Color.Gray
+            Color.Gray,
+        isLoading = uiState.value.isGettingAnswer
     )
 
     IconTextButton(
@@ -282,20 +296,28 @@ fun IconTextButton(
     text: String,
     iconSize: Dp = 40.dp,
     tintColor: Color = colorResource(MR.colors.primaryColor),
-    textSize: TextUnit = 14.sp
+    textSize: TextUnit = 14.sp,
+    isLoading: Boolean = false
 ) {
     Column (
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally) {
-        IconButton(
-            onClick = { onClick() }
-        ) {
-            Icon(
+        if (isLoading) {
+            CircularProgressIndicator(
                 modifier = Modifier.size(iconSize),
-                painter = icon,
-                tint = tintColor,
-                contentDescription = null
+                color = colorResource(MR.colors.primaryColor)
             )
+        } else {
+            IconButton(
+                onClick = { onClick() }
+            ) {
+                Icon(
+                    modifier = Modifier.size(iconSize),
+                    painter = icon,
+                    tint = tintColor,
+                    contentDescription = null
+                )
+            }
         }
         Text(text = text, fontSize = textSize)
     }

@@ -15,9 +15,13 @@ import kotlinx.serialization.json.Json
 import com.chitchat.common.model.ChatMessage
 import com.chitchat.common.model.PlatformEvent
 import com.chitchat.common.model.VoskResult
+import com.chitchat.common.model.asFileName
+import com.chitchat.common.model.toShortLocalDateTime
 import com.chitchat.common.model.toShortLocalTime
 import com.chitchat.common.repository.ChatRepository
 import com.chitchat.common.settings
+import io.github.aakira.napier.Napier
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
 
@@ -26,15 +30,15 @@ import kotlinx.serialization.SerialName
 data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     val isGettingAnswer: Boolean = false,
-    val isListening: Boolean = false
+    val isGettingSummary: Boolean = false,
+    val isListening: Boolean = false,
+    val displayMessage: String? = null
 )
 
 @Serializable
 data class RegisterDto(
-    @SerialName("user_id")
-    val userId: String,
-    @SerialName("platform")
-    val platform: String = "Android"
+    @SerialName("user_id") val userId: String,
+    @SerialName("req_platform") val reqPlatform: String
 )
 
 @Serializable
@@ -166,21 +170,28 @@ class ConversationViewModel: ViewModel() {
         }
     }
 
-    private fun refreshToken(userId: String) {
+    private fun refreshToken(userId: String, callGetAnswer: Boolean = false) {
         this.viewModelScope.launch {
-            isGettingAnswer(true)
-            val response = repo.refreshToken(userId)
-            isGettingAnswer(false)
-            if (response.status == HttpStatusCode.OK) {
-                val result: RegisterResponse = response.body()
-                repo.setAuthToken(result.accessToken)
-            } else {
-                if (getPlatformSpecificEvent().hasPremium()) {
-                    // User is premium but getting token failed
+            try {
+                val response = repo.refreshToken(userId)
+
+                if (response.status == HttpStatusCode.OK) {
+                    val result: RegisterResponse = response.body()
+                    repo.setAuthToken(result.accessToken)
+                    if (callGetAnswer) onGptAnswer()
                 } else {
-                    // Register failed because user is not Premium
+                    if (getPlatformSpecificEvent().hasPremium()) {
+                        // User is premium but getting token failed
+                    } else {
+                        // Register failed because user is not Premium
+                    }
+                    // Register failed no token
                 }
-                // Register failed no token
+            } catch (e: HttpRequestTimeoutException) {
+                _uiState.update {
+                    it.copy(displayMessage = "Server is busier than usual. try again few moments later.")
+                }
+                Napier.e("TimeOut Exception")
             }
         }
     }
@@ -192,34 +203,48 @@ class ConversationViewModel: ViewModel() {
 
     fun onListenToggle() {
         val isListening = _uiState.value.isListening
-        if (!isListening)
+        if (!isListening) {
             getPlatformSpecificEvent().startListen()
-        else
+            _uiState.update {
+                it.copy(displayMessage = "Initializing..")
+            }
+        }
+        else {
             getPlatformSpecificEvent().stopListen()
+        }
         _uiState.update { it.copy(isListening = !isListening) }
     }
 
     fun onShare() {
-        val allText = _uiState.value.messages.map { it.message }.joinToString(separator = "\n")
-        getPlatformSpecificEvent().shareAsTextFile(
-            allText, "file"
-            )// Clock.System.now().toShortLocalDateTime(true)
+        val allText = _uiState.value.messages.joinToString(separator = "\n") { it.message }
+        val fileName = Clock.System.now().asFileName()
+        getPlatformSpecificEvent().shareAsTextFile(allText, fileName)
     }
 
     fun onSummarize() {
         // Call backend
         if (getPlatformSpecificEvent().hasPremium()) {
             this.viewModelScope.launch {
-                isGettingAnswer(true)
-                val response = repo.summarize()
-                isGettingAnswer(false)
-                if (response.status == HttpStatusCode.OK) {
-                    val answer: GptAnswer = response.body()
-                    addMessageList(ChatMessage(message =
-                    answer.response.choices.map { it.message.content }.joinToString ("\n"),
-                        user = "AI",
-                        endTime = Clock.System.now().toShortLocalTime()))
+
+                isGettingSummary(true)
+                try {
+                    val response = repo.summarize()
+                    if (response.status == HttpStatusCode.OK) {
+                        val answer: GptAnswer = response.body()
+                        addMessageList(ChatMessage(message =
+                        answer.response.choices.map { it.message.content }.joinToString ("\n"),
+                            user = "AI",
+                            endTime = Clock.System.now().toShortLocalTime()))
+                    }
                 }
+                catch (e: HttpRequestTimeoutException) {
+                    _uiState.update {
+                        it.copy(displayMessage = "Server is busier than usual. try again few moments later.")
+                    }
+                    Napier.e("TimeOut Exception")
+                }
+                isGettingSummary(false)
+
             }
         } else {
             getPlatformSpecificEvent().startPurchase()
@@ -232,24 +257,41 @@ class ConversationViewModel: ViewModel() {
         if (getPlatformSpecificEvent().hasPremium()) {
             this.viewModelScope.launch {
                 isGettingAnswer(true)
-                val response = repo.answer(_uiState.value.messages)
-                if (response == null) {
-                    getPlatformSpecificEvent().startPurchase()
-                    return@launch
+                try {
+                    val response = repo.answer(_uiState.value.messages.takeLast(7))
+                    if (response == null) {
+                        getPlatformSpecificEvent().startPurchase()
+                        return@launch
+                    }
+                    if (response.status == HttpStatusCode.OK) {
+                        val result: GptAnswer = response.body()
+                        addMessageList(
+                            ChatMessage(message = result
+                                .response
+                                .choices.map { it.message.content }.joinToString ("\n" ),
+                                user = "AI",
+                                endTime = Clock.System.now().toShortLocalTime()))
+                    }
+                    if (response.status == HttpStatusCode.Unauthorized) {
+                        refreshToken(userId, true)
+                    }
+                } catch (e: HttpRequestTimeoutException) {
+                    _uiState.update {
+                        it.copy(displayMessage = "Server is busier than usual. try again few moments later.")
+                    }
+                    Napier.e("TimeOut Exception")
                 }
                 isGettingAnswer(false)
-                if (response.status == HttpStatusCode.OK) {
-                    val result: GptAnswer = response.body()
-                    addMessageList(
-                        ChatMessage(message = result
-                            .response
-                            .choices.map { it.message.content }.joinToString ("\n" ),
-                        user = "AI",
-                        endTime = Clock.System.now().toShortLocalTime()))
-                }
+
             }
         } else {
             getPlatformSpecificEvent().startPurchase()
+        }
+    }
+
+    fun messageShown() {
+        _uiState.update {
+            it.copy(displayMessage = null)
         }
     }
 
@@ -261,5 +303,10 @@ class ConversationViewModel: ViewModel() {
 
     private fun isGettingAnswer(value: Boolean) {
         _uiState.update { it.copy(isGettingAnswer = value) }
+    }
+
+
+    private fun isGettingSummary(value: Boolean) {
+        _uiState.update { it.copy(isGettingSummary = value) }
     }
 }

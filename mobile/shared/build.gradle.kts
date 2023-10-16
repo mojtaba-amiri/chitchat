@@ -105,6 +105,7 @@ kotlin {
                 api("net.java.dev.jna:jna:5.13.0@aar")
                 api("com.alphacephei:vosk-android:0.3.47@aar")
             }
+
         }
         val iosX64Main by getting
         val iosArm64Main by getting
