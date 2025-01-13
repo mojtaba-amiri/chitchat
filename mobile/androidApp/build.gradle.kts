@@ -28,8 +28,8 @@ android {
         applicationId = "com.chitchat.ChitChat"
         minSdk = (findProperty("android.minSdk") as String).toInt()
         targetSdk = (findProperty("android.targetSdk") as String).toInt()
-        versionCode = 108
-        versionName = "1.08"
+        versionCode = 109
+        versionName = "1.09"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

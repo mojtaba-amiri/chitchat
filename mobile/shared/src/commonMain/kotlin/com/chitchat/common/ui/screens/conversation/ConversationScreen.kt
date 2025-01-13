@@ -25,11 +25,13 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
+import androidx.compose.material.ScaffoldState
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -75,7 +77,10 @@ fun ConversationScreen(modifier: Modifier = Modifier,
     val uiState = viewModel.uiState.collectAsState()
     viewModel.watch(platformEvent)
     val mode = remember { mutableStateOf("Portrait") }
+    val scaffoldState: ScaffoldState = rememberScaffoldState()
+
     Scaffold(
+        scaffoldState = scaffoldState,
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         }

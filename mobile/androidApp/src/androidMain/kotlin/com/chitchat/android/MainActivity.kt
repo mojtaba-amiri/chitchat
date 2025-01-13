@@ -96,7 +96,9 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 }
 
                 override fun onSuccess(entitlements: Map<String, QEntitlement>) {
-                    viewModel.updatePermissions()
+                    if (entitlements.isNotEmpty()) {
+                        viewModel.confirmPermission(true)
+                    }
                 }
             })
     }
